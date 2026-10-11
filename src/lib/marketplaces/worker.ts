@@ -1,24 +1,7 @@
 import "server-only";
-import type { Database } from "@/lib/supabase/database.types";
 import { ShopeeError } from "./shopee/client";
-import { admin, loadShop, shopCredentials, type ShopRow } from "./store";
-
-type Job = Database["public"]["Tables"]["marketplace_jobs"]["Row"];
-
-/** Tarefa da fila: recebe a loja e o payload; lança erro para tentar de novo. */
-export type JobHandler = (ctx: { job: Job; shop: ShopRow }) => Promise<void>;
-
-const handlers: Record<string, JobHandler> = {
-  // Renova a autorização antes de vencer.
-  "auth.refresh": async ({ shop }) => {
-    await shopCredentials(shop, true);
-  },
-};
-
-/** Registra um tipo de tarefa (cada etapa da integração acrescenta os seus). */
-export function registerHandler(kind: string, handler: JobHandler) {
-  handlers[kind] = handler;
-}
+import { handlers } from "./handlers";
+import { admin, loadShop } from "./store";
 
 /** Processa um lote da fila. Chamado pelo relógio do banco (pg_cron) ou logo após um aviso. */
 export async function processJobs(limit = 20) {

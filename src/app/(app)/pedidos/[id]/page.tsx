@@ -61,7 +61,7 @@ async function Pedido({ params }: { params: Params }) {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
+      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, external_status, ship_by_at, package_number, channel_fee, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
     )
     .eq("id", id)
     .eq("organization_id", membership.organizationId)
@@ -431,8 +431,42 @@ async function Pedido({ params }: { params: Params }) {
               <Row label="Pagamento" value={order.payment_methods?.name ?? "Não informado"} />
               <Row label="Criado em" value={formatDateTime(order.created_at)} />
               {order.tracking_code && <Row label="Rastreio" value={order.tracking_code} />}
+              {order.channel_fee != null && (
+                <>
+                  <Row
+                    label="Taxas do marketplace"
+                    value={`− ${formatCurrency(order.channel_fee)}`}
+                  />
+                  <Row
+                    label="Você recebe"
+                    value={formatCurrency(order.total - order.channel_fee)}
+                    strong
+                  />
+                </>
+              )}
             </dl>
           </Card>
+
+          {order.external_id && (
+            <Card title="Marketplace">
+              <dl className="flex flex-col gap-1.5 text-sm">
+                {order.marketplace_shops?.name && (
+                  <Row label="Loja" value={order.marketplace_shops.name} />
+                )}
+                <Row label="Pedido" value={order.external_id} />
+                {order.external_status && (
+                  <Row
+                    label="Situação lá"
+                    value={EXTERNAL_STATUS[order.external_status] ?? order.external_status}
+                  />
+                )}
+                {order.ship_by_at && (
+                  <Row label="Postar até" value={formatDateTime(order.ship_by_at)} strong />
+                )}
+                {order.package_number && <Row label="Pacote" value={order.package_number} />}
+              </dl>
+            </Card>
+          )}
 
           <Card title="Cliente">
             <p className="font-medium">{order.customer_name}</p>
@@ -531,6 +565,20 @@ function Card({
     </section>
   );
 }
+
+/** Situação do pedido na Shopee, em português. */
+const EXTERNAL_STATUS: Record<string, string> = {
+  UNPAID: "Aguardando pagamento",
+  READY_TO_SHIP: "Pronto para envio",
+  PROCESSED: "Etiqueta gerada",
+  RETRY_SHIP: "Reenvio",
+  SHIPPED: "Enviado",
+  TO_CONFIRM_RECEIVE: "Aguardando confirmação do comprador",
+  IN_CANCEL: "Cancelamento solicitado",
+  CANCELLED: "Cancelado",
+  TO_RETURN: "Devolução",
+  COMPLETED: "Concluído",
+};
 
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (

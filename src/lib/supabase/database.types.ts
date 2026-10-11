@@ -230,6 +230,7 @@ export type Database = {
           region: string | null
           status: string
           stock_ratio: number
+          orders_synced_until: string | null
           updated_at: string
         }
         Insert: {
@@ -251,6 +252,7 @@ export type Database = {
           region?: string | null
           status?: string
           stock_ratio?: number
+          orders_synced_until?: string | null
           updated_at?: string
         }
         Update: {
@@ -272,6 +274,7 @@ export type Database = {
           region?: string | null
           status?: string
           stock_ratio?: number
+          orders_synced_until?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -576,6 +579,7 @@ export type Database = {
       orders: {
         Row: {
           package_number: string | null;
+          channel_fee: number | null;
           ship_by_at: string | null;
           external_status: string | null;
           shop_id: string | null;
@@ -609,6 +613,7 @@ export type Database = {
         };
         Insert: {
           package_number?: string | null;
+          channel_fee?: number | null;
           ship_by_at?: string | null;
           external_status?: string | null;
           shop_id?: string | null;
@@ -642,6 +647,7 @@ export type Database = {
         };
         Update: {
           package_number?: string | null;
+          channel_fee?: number | null;
           ship_by_at?: string | null;
           external_status?: string | null;
           shop_id?: string | null;
@@ -674,6 +680,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "orders_shop_id_fkey";
+            columns: ["shop_id"];
+            isOneToOne: false;
+            referencedRelation: "marketplace_shops";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "orders_organization_id_fkey";
             columns: ["organization_id"];
@@ -2015,6 +2028,10 @@ export type Database = {
       marketplace_claim_jobs: {
         Args: { p_limit?: number }
         Returns: Database["public"]["Tables"]["marketplace_jobs"]["Row"][]
+      }
+      marketplace_upsert_order: {
+        Args: { p_shop: string; p_order: Json }
+        Returns: string | null
       }
       marketplace_finish_job: {
         Args: { p_job: number; p_ok: boolean; p_error?: string | null }
