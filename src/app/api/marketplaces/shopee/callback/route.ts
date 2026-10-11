@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     await db.rpc("marketplace_enqueue", {
       p_shop: shopRowId,
       p_kind: "listings.import",
-      p_dedupe: "listings",
+      p_dedupe: "listings.import",
     });
     await db.rpc("marketplace_enqueue", {
       p_shop: shopRowId,

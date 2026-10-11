@@ -18,6 +18,7 @@ export function ShopActions({
     id: string;
     name: string | null;
     stock_ratio: number;
+    price_sync_enabled: boolean;
     chat_message_enabled: boolean;
     chat_template: string | null;
     status: string;
@@ -83,6 +84,7 @@ export function ShopActions({
         defaultValues={{
           name: shop.name ?? "",
           stock_pct: String(Math.round(shop.stock_ratio * 100)),
+          price_sync_enabled: shop.price_sync_enabled,
           chat_message_enabled: shop.chat_message_enabled,
           chat_template: shop.chat_template ?? DEFAULT_CHAT_TEMPLATE,
         }}
@@ -93,6 +95,12 @@ export function ShopActions({
             label: "Estoque enviado (% da disponibilidade)",
             type: "number",
             hint: "Margem de segurança: com 90%, se dá para produzir 100, a Shopee recebe 90.",
+          },
+          {
+            name: "price_sync_enabled",
+            label: "Enviar os preços do sistema para a Shopee",
+            type: "switch",
+            hint: "Usa o preço do canal Shopee (Cadastros → Preços por canal). Confira os preços antes de ligar.",
           },
           {
             name: "chat_message_enabled",

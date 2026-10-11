@@ -133,6 +133,9 @@ export type Database = {
           external_item_id: string
           external_model_id: string
           external_sku: string | null
+          external_price: number | null
+          external_stock: number | null
+          last_days_sent: number | null
           id: string
           last_price_sent: number | null
           last_stock_sent: number | null
@@ -150,6 +153,9 @@ export type Database = {
           external_item_id: string
           external_model_id?: string
           external_sku?: string | null
+          external_price?: number | null
+          external_stock?: number | null
+          last_days_sent?: number | null
           id?: string
           last_price_sent?: number | null
           last_stock_sent?: number | null
@@ -167,6 +173,9 @@ export type Database = {
           external_item_id?: string
           external_model_id?: string
           external_sku?: string | null
+          external_price?: number | null
+          external_stock?: number | null
+          last_days_sent?: number | null
           id?: string
           last_price_sent?: number | null
           last_stock_sent?: number | null
@@ -231,6 +240,7 @@ export type Database = {
           status: string
           stock_ratio: number
           orders_synced_until: string | null
+          price_sync_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -253,6 +263,7 @@ export type Database = {
           status?: string
           stock_ratio?: number
           orders_synced_until?: string | null
+          price_sync_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -275,6 +286,7 @@ export type Database = {
           status?: string
           stock_ratio?: number
           orders_synced_until?: string | null
+          price_sync_enabled?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -2032,6 +2044,25 @@ export type Database = {
       marketplace_upsert_order: {
         Args: { p_shop: string; p_order: Json }
         Returns: string | null
+      }
+      marketplace_upsert_listings: {
+        Args: { p_shop: string; p_items: Json; p_complete?: boolean }
+        Returns: number
+      }
+      marketplace_listing_targets: {
+        Args: { p_shop: string }
+        Returns: {
+          listing_id: string
+          external_item_id: string
+          external_model_id: string
+          stock: number | null
+          price: number
+          production_days: number
+          last_stock_sent: number | null
+          last_price_sent: number | null
+          last_days_sent: number | null
+          skip_reason: string | null
+        }[]
       }
       marketplace_finish_job: {
         Args: { p_job: number; p_ok: boolean; p_error?: string | null }

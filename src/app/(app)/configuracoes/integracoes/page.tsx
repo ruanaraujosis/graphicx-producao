@@ -1,4 +1,5 @@
-import { AlertTriangle, CheckCircle2, PlugZap, Store } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ListChecks, PlugZap, Store } from "lucide-react";
+import Link from "next/link";
 import { Suspense } from "react";
 import { BackLink, ListSkeleton } from "@/components/kit/back-link";
 import { Pill } from "@/components/kit/data-list";
@@ -48,11 +49,11 @@ async function Integracoes({ searchParams }: { searchParams: Params }) {
   const shopeeReady = getShopeeConfig() !== null;
   const supabase = await createClient();
 
-  const [{ data: shops }, { data: jobs }, { data: logs }] = await Promise.all([
+  const [{ data: shops }, { data: jobs }, { data: logs }, { data: listings }] = await Promise.all([
     supabase
       .from("marketplace_shops")
       .select(
-        "id, marketplace, external_shop_id, name, region, status, stock_ratio, chat_message_enabled, chat_template, last_sync_at, last_error, access_expires_at",
+        "id, marketplace, external_shop_id, name, region, status, stock_ratio, price_sync_enabled, chat_message_enabled, chat_template, last_sync_at, last_error, access_expires_at",
       )
       .eq("organization_id", org)
       .order("created_at"),
@@ -69,6 +70,12 @@ async function Integracoes({ searchParams }: { searchParams: Params }) {
       .eq("organization_id", org)
       .order("created_at", { ascending: false })
       .limit(60),
+    supabase
+      .from("marketplace_listings")
+      .select("shop_id, variant_id")
+      .eq("organization_id", org)
+      .neq("status", "excluido")
+      .limit(10000),
   ]);
   const list = shops ?? [];
   const errorMessage = typeof raw.erro === "string" ? ERRORS[raw.erro] : undefined;
@@ -131,6 +138,11 @@ async function Integracoes({ searchParams }: { searchParams: Params }) {
               const mine = (jobs ?? []).filter((j) => j.shop_id === s.id);
               const pending = mine.filter((j) => j.status !== "erro").length;
               const failed = mine.filter((j) => j.status === "erro");
+              const shopAds = (listings ?? []).filter((l) => l.shop_id === s.id);
+              const ads = {
+                total: shopAds.length,
+                linked: shopAds.filter((l) => l.variant_id).length,
+              };
               const recent = (logs ?? []).filter((l) => l.shop_id === s.id).slice(0, 6);
               const st = STATUS[s.status as keyof typeof STATUS] ?? STATUS.conectada;
               return (
@@ -156,6 +168,9 @@ async function Integracoes({ searchParams }: { searchParams: Params }) {
                         : "Sem mensagem automática"}
                     </Pill>
                     <Pill tone={pending ? "warning" : "muted"}>{`Fila: ${pending}`}</Pill>
+                    <Pill tone={ads.total > ads.linked ? "warning" : "muted"}>
+                      {`Anúncios vinculados: ${ads.linked} de ${ads.total}`}
+                    </Pill>
                     {failed.length > 0 && <Pill tone="danger">{`Com erro: ${failed.length}`}</Pill>}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -189,7 +204,15 @@ async function Integracoes({ searchParams }: { searchParams: Params }) {
                       </ul>
                     </details>
                   )}
-                  {canManage && <ShopActions shop={s} failedJobs={failed.length} />}
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild variant="outline" size="sm" className="min-h-11 md:min-h-8">
+                      <Link href={`/configuracoes/integracoes/${s.id}/anuncios`}>
+                        <ListChecks />
+                        Anúncios e estoque
+                      </Link>
+                    </Button>
+                    {canManage && <ShopActions shop={s} failedJobs={failed.length} />}
+                  </div>
                 </li>
               );
             })}
