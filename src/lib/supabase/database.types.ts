@@ -2134,7 +2134,7 @@ export type Database = {
       };
     };
     Enums: {
-      marketplace: "shopee" | "magalu" | "tiktok";
+      marketplace: "shopee";
       order_status:
         | "orcamento"
         | "novo"
@@ -2160,7 +2160,7 @@ export type Database = {
         | "arte_aprovada"
         | "alteracao_pedida"
         | "arte_final";
-      sales_channel: "balcao" | "shopee" | "magalu" | "tiktok" | "whatsapp";
+      sales_channel: "balcao" | "shopee" | "whatsapp";
       person_type: "pf" | "pj";
       fulfillment_mode: "sob_encomenda" | "pronta_entrega";
       stock_movement_type: "entrada" | "saida" | "ajuste" | "perda" | "consumo" | "reserva" | "liberacao";

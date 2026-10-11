@@ -44,8 +44,6 @@ export default function InicioPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <ChannelBadge channel="shopee" />
-          <ChannelBadge channel="magalu" />
-          <ChannelBadge channel="tiktok" />
           <ChannelBadge channel="whatsapp" />
           <ChannelBadge channel="balcao" />
         </div>

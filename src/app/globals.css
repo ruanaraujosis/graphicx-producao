@@ -55,8 +55,6 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-channel-shopee: var(--channel-shopee);
-  --color-channel-magalu: var(--channel-magalu);
-  --color-channel-tiktok: var(--channel-tiktok);
   --color-channel-whatsapp: var(--channel-whatsapp);
   --color-channel-balcao: var(--channel-balcao);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -120,8 +118,6 @@
 
   /* Canais de venda */
   --channel-shopee: #d9411f;
-  --channel-magalu: #0a6fd8;
-  --channel-tiktok: #d4124f;
   --channel-whatsapp: #15803d;
   --channel-balcao: #0e7c86;
 
@@ -182,8 +178,6 @@
   --info-soft: #241a45;
 
   --channel-shopee: #ff7a5c;
-  --channel-magalu: #5aa9ff;
-  --channel-tiktok: #ff5c8e;
   --channel-whatsapp: #4ade80;
   --channel-balcao: #38c5d1;
 

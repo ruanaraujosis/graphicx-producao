@@ -77,7 +77,7 @@ async function Integracoes({ searchParams }: { searchParams: Params }) {
     <>
       <PageHeader
         title="Integrações"
-        description="Conecte as lojas dos marketplaces: pedidos entram sozinhos e estoque e preços são enviados pelo sistema."
+        description="Conecte as lojas da Shopee: pedidos entram sozinhos e estoque e preços são enviados pelo sistema."
       />
 
       {raw.conectada === "1" && (
@@ -117,20 +117,6 @@ async function Integracoes({ searchParams }: { searchParams: Params }) {
               </p>
             ))}
         </div>
-        {["Magalu", "TikTok Shop"].map((name) => (
-          <div
-            key={name}
-            className="flex flex-col gap-3 rounded-2xl border bg-card p-5 opacity-70 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <IconChip icon={Store} tone="info" />
-              <div>
-                <p className="font-semibold">{name}</p>
-                <p className="text-xs text-muted-foreground">Em breve</p>
-              </div>
-            </div>
-          </div>
-        ))}
       </section>
 
       <section className="flex flex-col gap-3">

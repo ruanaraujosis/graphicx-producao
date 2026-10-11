@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SALES_CHANNELS, channelPrice, grossMarginPct, roundCents } from "./pricing";
@@ -36,12 +36,15 @@ describe("grossMarginPct", () => {
 });
 
 describe("canais", () => {
-  it("são os mesmos do enum sales_channel no banco", () => {
-    const sql = readFileSync(
-      join(process.cwd(), "supabase/migrations/20261010000000_cadastros_estoque.sql"),
-      "utf8",
+  it("são os mesmos do enum sales_channel no banco (última definição)", () => {
+    const dir = join(process.cwd(), "supabase/migrations");
+    const sql = readdirSync(dir)
+      .sort()
+      .map((f) => readFileSync(join(dir, f), "utf8"))
+      .join("\n");
+    const match = [...sql.matchAll(/create type public\.sales_channel as enum \(([^)]+)\)/g)].at(
+      -1,
     );
-    const match = sql.match(/create type public\.sales_channel as enum \(([^)]+)\)/);
     const values = [...match![1].matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
     expect(values).toEqual([...SALES_CHANNELS]);
   });

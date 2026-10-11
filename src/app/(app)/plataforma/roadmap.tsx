@@ -17,10 +17,9 @@ const ROADMAP = [
   { phase: 5, title: "Shopee", detail: "Produtos, estoque, pedidos, etiquetas e rastreio" },
   { phase: 6, title: "NF-e automática", detail: "Emissão e reforma tributária (IBS/CBS)" },
   { phase: 7, title: "Marketing Shopee", detail: "Impulsionamento e respostas com IA" },
-  { phase: 8, title: "Magalu e TikTok Shop", detail: "Mesma camada de integrações" },
 ];
 
-const CURRENT_PHASE = 4;
+const CURRENT_PHASE = 5;
 
 export function Roadmap() {
   return (

@@ -1,6 +1,6 @@
 # GraphicX
 
-Plataforma SaaS de gestão para gráficas: pedidos, aprovação de artes, produção (PCP), estoque, financeiro, NF-e, dashboard para TV e integração com marketplaces (Shopee, Magalu, TikTok Shop). Multi-empresa: cada gráfica cliente (ex.: Smart Gráfica) tem seus dados isolados.
+Plataforma SaaS de gestão para gráficas: pedidos, aprovação de artes, produção (PCP), estoque, financeiro, NF-e, dashboard para TV e integração com a Shopee. Multi-empresa: cada gráfica cliente (ex.: Smart Gráfica) tem seus dados isolados.
 
 **Stack:** Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind CSS 4 + shadcn/ui · Supabase · Vercel
 
@@ -184,4 +184,4 @@ Para ativar a integração em um ambiente (uma vez, pela equipe da GraphicX):
 
 Sem essas variáveis, a tela mostra que a conexão "será liberada em breve" e nada é chamado.
 
-Como funciona: avisos da Shopee e rotinas (renovação de token a cada 15 min, conferência de pedidos) viram tarefas em `marketplace_jobs`; o processador (`src/lib/marketplaces/worker.ts`) as executa com novas tentativas (espera exponencial, até 6). Cada chamada fica em `marketplace_logs`, visível na tela de Integrações. Novo marketplace = um cliente em `src/lib/marketplaces/<nome>/`, o valor no enum `marketplace` e os handlers registrados no processador.
+Como funciona: avisos da Shopee e rotinas (renovação de token a cada 15 min, conferência de pedidos) viram tarefas em `marketplace_jobs`; o processador (`src/lib/marketplaces/worker.ts`) as executa com novas tentativas (espera exponencial, até 6). Cada chamada fica em `marketplace_logs`, visível na tela de Integrações.

@@ -6,16 +6,6 @@ export const CHANNELS = {
     className: "text-channel-shopee bg-channel-shopee/10",
     dot: "bg-channel-shopee",
   },
-  magalu: {
-    label: "Magalu",
-    className: "text-channel-magalu bg-channel-magalu/10",
-    dot: "bg-channel-magalu",
-  },
-  tiktok: {
-    label: "TikTok Shop",
-    className: "text-channel-tiktok bg-channel-tiktok/10",
-    dot: "bg-channel-tiktok",
-  },
   whatsapp: {
     label: "WhatsApp",
     className: "text-channel-whatsapp bg-channel-whatsapp/10",

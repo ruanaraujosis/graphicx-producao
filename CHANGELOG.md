@@ -4,6 +4,17 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+### Fase 5 — Shopee
+
+#### Adicionado
+
+- **Integrações:** Configurações → Integrações com o botão "Conectar loja da Shopee" (autorização OAuth; tokens no Supabase Vault com renovação automática), situação de cada loja, fila de sincronização com novas tentativas e últimas chamadas.
+- **Pedidos da Shopee** entram sozinhos ao serem pagos (aviso da Shopee + conferência a cada 15 min), sem duplicar, com itens ligados pelo anúncio ou pelo SKU, prazo de postagem, cancelamento e envio vindos da Shopee e a **taxa real** do repasse na conta a receber.
+
+#### Removido
+
+- **Magalu e TikTok Shop** saem do produto: a GraphicX integra somente a Shopee. Canais retirados do banco, das telas e dos preços por canal.
+
 ## [0.4.0] - 2026-10-11
 
 ### Fase 4 — Dashboard TV + Financeiro básico
