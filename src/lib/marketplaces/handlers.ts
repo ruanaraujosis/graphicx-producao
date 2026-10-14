@@ -1,4 +1,5 @@
 import "server-only";
+import sharp from "sharp";
 import type { Database } from "@/lib/supabase/database.types";
 import { ShopeeError } from "./shopee/client";
 import { requireShopeeConfig } from "./shopee/config";
@@ -17,7 +18,19 @@ import {
   updatePrice,
   updateStock,
 } from "./shopee/products";
+import { type PublicationPayload, publicationProblems } from "./publication";
+import {
+  addItem,
+  getCategories,
+  initTierVariation,
+  MAX_IMAGES,
+  type PublishVariant,
+  uploadImage,
+} from "./shopee/publish";
 import { admin, logger, shopCredentials, type ShopRow } from "./store";
+
+/** Erro que repetir não resolve: a tarefa vai direto para "erro". */
+export class PermanentError extends Error {}
 
 type Job = Database["public"]["Tables"]["marketplace_jobs"]["Row"];
 
@@ -208,6 +221,138 @@ export const handlers: Record<string, JobHandler> = {
         const message = itemError(e);
         for (const r of changed) await markListing(r.listing_id, { sync_error: message });
       }
+    }
+  },
+
+  // Atualiza a árvore de categorias da Shopee (dado público, compartilhado).
+  "categories.sync": async ({ shop }) => {
+    const categories = await getCategories(requireShopeeConfig(), await shopCredentials(shop), {
+      onLog: logger(shop),
+    });
+    if (!categories.length) throw new Error("A Shopee não devolveu categorias.");
+    const now = new Date().toISOString();
+    for (let i = 0; i < categories.length; i += 500) {
+      const { error } = await admin()
+        .from("marketplace_categories")
+        .upsert(
+          categories
+            .slice(i, i + 500)
+            .map((c) => ({ ...c, marketplace: "shopee" as const, updated_at: now })),
+          { onConflict: "marketplace,category_id" },
+        );
+      if (error) throw new Error(`Categorias: ${error.message}`);
+    }
+  },
+
+  // Publica um anúncio novo a partir do cadastro.
+  "listing.publish": async ({ job, shop }) => {
+    const id = (job.payload as { publication_id?: string }).publication_id;
+    if (!id) throw new PermanentError("Publicação não informada.");
+    const db = admin();
+    const { data, error } = await db.rpc("marketplace_publication_payload", { p_publication: id });
+    if (error) throw new Error(`Publicação: ${error.message}`);
+    if (!data) throw new PermanentError("Publicação não encontrada.");
+    const p = data as unknown as PublicationPayload;
+    const pub = p.publication;
+    try {
+      const problems = publicationProblems({
+        title: pub.title,
+        description: pub.description,
+        category_id: pub.category_id,
+        logistics: pub.logistics,
+        images: p.images.length,
+        productActive: p.product.active,
+        variants: p.variants,
+      });
+      if (problems.length) throw new PermanentError(problems.join(" "));
+
+      const config = requireShopeeConfig();
+      const creds = await shopCredentials(shop);
+      const onLog = logger(shop);
+      const variants = p.variants.map((v) => ({
+        ...v,
+        stock: v.stock ?? 0,
+        weight_g: v.weight_g ?? 0,
+      })) satisfies PublishVariant[];
+
+      // Se o anúncio já foi criado numa tentativa anterior, só falta concluir as variações.
+      let itemId = pub.external_item_id ? Number(pub.external_item_id) : null;
+      if (!itemId) {
+        const imageIds: string[] = [];
+        for (const [i, path] of p.images.slice(0, MAX_IMAGES).entries()) {
+          const file = await db.storage.from("produtos").download(path);
+          if (file.error) throw new Error(`Foto ${i + 1}: ${file.error.message}`);
+          const jpeg = await sharp(Buffer.from(await file.data.arrayBuffer()))
+            .rotate()
+            .resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true })
+            .flatten({ background: "#ffffff" })
+            .jpeg({ quality: 88 })
+            .toBuffer();
+          imageIds.push(await uploadImage(config, jpeg, `foto-${i + 1}.jpg`, { onLog }));
+        }
+        itemId = await addItem(
+          config,
+          creds,
+          {
+            title: pub.title,
+            description: pub.description,
+            categoryId: Number(pub.category_id),
+            attributes: pub.attributes,
+            logistics: pub.logistics,
+            itemStatus: pub.item_status,
+            productionDays: p.product.production_days,
+            imageIds,
+            variants,
+          },
+          { onLog },
+        );
+        await db
+          .from("marketplace_publications")
+          .update({ external_item_id: String(itemId) })
+          .eq("id", pub.id);
+      }
+
+      const links =
+        variants.length === 1
+          ? [{ variant_id: variants[0].variant_id, model_id: "" }]
+          : await initTierVariation(config, creds, itemId, variants, { onLog });
+
+      const now = new Date().toISOString();
+      const { error: listErr } = await db.from("marketplace_listings").upsert(
+        variants.map((v, i) => ({
+          organization_id: pub.organization_id,
+          shop_id: pub.shop_id,
+          variant_id: v.variant_id,
+          external_item_id: String(itemId),
+          external_model_id: links[i]?.model_id ?? "",
+          title: variants.length === 1 ? pub.title : `${pub.title} — ${v.name}`.slice(0, 300),
+          external_sku: v.sku,
+          status: pub.item_status === "NORMAL" ? "ativo" : "inativo",
+          external_price: v.price,
+          external_stock: v.stock,
+          last_price_sent: v.price,
+          last_stock_sent: v.stock,
+          last_days_sent: p.product.production_days,
+          last_synced_at: now,
+          sync_error: null,
+        })),
+        { onConflict: "shop_id,external_item_id,external_model_id" },
+      );
+      if (listErr) throw new Error(`Vínculos: ${listErr.message}`);
+
+      await db
+        .from("marketplace_publications")
+        .update({ status: "publicado", published_at: now, error: null })
+        .eq("id", pub.id);
+    } catch (e) {
+      await db
+        .from("marketplace_publications")
+        .update({
+          status: "erro",
+          error: (e instanceof Error ? e.message : "Erro ao publicar.").slice(0, 1000),
+        })
+        .eq("id", pub.id);
+      throw e;
     }
   },
 };

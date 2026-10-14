@@ -1,6 +1,6 @@
 import "server-only";
 import { ShopeeError } from "./shopee/client";
-import { handlers } from "./handlers";
+import { handlers, PermanentError } from "./handlers";
 import { admin, loadShop } from "./store";
 
 /** Processa um lote da fila. Chamado pelo relógio do banco (pg_cron) ou logo após um aviso. */
@@ -31,7 +31,19 @@ export async function processJobs(limit = 20) {
           : e instanceof Error
             ? e.message
             : "Erro desconhecido.";
-      await db.rpc("marketplace_finish_job", { p_job: job.id, p_ok: false, p_error: message });
+      if (e instanceof PermanentError) {
+        // Erro que repetir não resolve (falta dado no cadastro): vai direto para "erro".
+        await db
+          .from("marketplace_jobs")
+          .update({
+            status: "erro",
+            last_error: message.slice(0, 2000),
+            finished_at: new Date().toISOString(),
+          })
+          .eq("id", job.id);
+      } else {
+        await db.rpc("marketplace_finish_job", { p_job: job.id, p_ok: false, p_error: message });
+      }
       failed++;
     }
   }

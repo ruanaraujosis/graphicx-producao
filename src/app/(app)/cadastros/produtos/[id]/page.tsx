@@ -1,4 +1,5 @@
-import { ClipboardList, Pencil, Plus, Tags } from "lucide-react";
+import { ClipboardList, Pencil, Plus, Send, Tags } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { BackLink, ListSkeleton } from "@/components/kit/back-link";
@@ -155,6 +156,37 @@ async function Produto({ params }: { params: PageProps<"/cadastros/produtos/[id]
   const images = (imagesRes.data ?? []).map((i) => ({
     id: i.id,
     url: urlByPath.get(i.storage_path) ?? null,
+  }));
+
+  // Shopee: lojas conectadas, publicações deste produto e anúncios já vinculados.
+  const variantIds = variants.map((v) => v.id);
+  const [shopsRes, pubsRes, linkedRes] = await Promise.all([
+    supabase
+      .from("marketplace_shops")
+      .select("id, name, external_shop_id, status")
+      .eq("organization_id", org)
+      .neq("status", "desconectada")
+      .order("created_at"),
+    supabase
+      .from("marketplace_publications")
+      .select("shop_id, status, error, external_item_id")
+      .eq("product_id", id),
+    variantIds.length
+      ? supabase
+          .from("marketplace_listings")
+          .select("shop_id, external_item_id")
+          .in("variant_id", variantIds)
+          .neq("status", "excluido")
+      : Promise.resolve({ data: [] as { shop_id: string; external_item_id: string }[] }),
+  ]);
+  const shops = (shopsRes.data ?? []).map((sh) => ({
+    ...sh,
+    publication: (pubsRes.data ?? []).find((p) => p.shop_id === sh.id) ?? null,
+    linkedItems: [
+      ...new Set(
+        (linkedRes.data ?? []).filter((l) => l.shop_id === sh.id).map((l) => l.external_item_id),
+      ),
+    ],
   }));
 
   const categoryOptions = (categoriesRes.data ?? []).map((c) => ({ value: c.id, label: c.name }));
@@ -356,6 +388,59 @@ async function Produto({ params }: { params: PageProps<"/cadastros/produtos/[id]
           images={images}
           canManage={canManage}
         />
+      </Section>
+
+      <Section
+        title="Shopee"
+        description="Publique este produto como anúncio novo ou acompanhe os anúncios vinculados."
+      >
+        {shops.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhuma loja conectada. Conecte em Configurações → Integrações.
+          </p>
+        ) : (
+          <ul className="flex flex-col divide-y">
+            {shops.map((sh) => {
+              const pub = sh.publication;
+              const linked = sh.linkedItems.length > 0;
+              const canPublish =
+                canManage && sh.status === "conectada" && !linked && pub?.status !== "na_fila";
+              return (
+                <li key={sh.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="font-medium">{sh.name ?? `Loja ${sh.external_shop_id}`}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {linked
+                        ? `Vinculado ao anúncio ${sh.linkedItems.join(", ")}`
+                        : pub?.status === "na_fila"
+                          ? "Publicando…"
+                          : pub?.status === "rascunho"
+                            ? "Rascunho salvo, ainda não publicado"
+                            : "Ainda não está à venda nesta loja"}
+                    </p>
+                    {pub?.status === "erro" && pub.error && (
+                      <p className="mt-1 text-xs text-destructive">{pub.error}</p>
+                    )}
+                  </div>
+                  {linked ? (
+                    <Pill tone="success">
+                      {pub?.status === "publicado" ? "Publicado" : "Vinculado"}
+                    </Pill>
+                  ) : (
+                    canPublish && (
+                      <Button asChild variant="outline" size="sm" className="min-h-11 md:min-h-8">
+                        <Link href={`/cadastros/produtos/${product.id}/shopee/${sh.id}`}>
+                          <Send />
+                          {pub ? "Revisar e publicar" : "Publicar na Shopee"}
+                        </Link>
+                      </Button>
+                    )
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </Section>
 
       <Section title="Dados fiscais" description="Usados na emissão de NF-e.">

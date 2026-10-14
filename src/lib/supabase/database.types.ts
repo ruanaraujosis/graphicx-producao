@@ -219,6 +219,121 @@ export type Database = {
           },
         ]
       }
+      marketplace_categories: {
+        Row: {
+          category_id: number
+          has_children: boolean
+          marketplace: Database["public"]["Enums"]["marketplace"]
+          name: string
+          parent_id: number | null
+          path: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: number
+          has_children?: boolean
+          marketplace: Database["public"]["Enums"]["marketplace"]
+          name: string
+          parent_id?: number | null
+          path: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: number
+          has_children?: boolean
+          marketplace?: Database["public"]["Enums"]["marketplace"]
+          name?: string
+          parent_id?: number | null
+          path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_publications: {
+        Row: {
+          attributes: Json
+          category_id: number | null
+          category_path: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          error: string | null
+          external_item_id: string | null
+          id: string
+          item_status: string
+          logistics: Json
+          organization_id: string
+          product_id: string
+          published_at: string | null
+          shop_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attributes?: Json
+          category_id?: number | null
+          category_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          error?: string | null
+          external_item_id?: string | null
+          id?: string
+          item_status?: string
+          logistics?: Json
+          organization_id: string
+          product_id: string
+          published_at?: string | null
+          shop_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attributes?: Json
+          category_id?: number | null
+          category_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          error?: string | null
+          external_item_id?: string | null
+          id?: string
+          item_status?: string
+          logistics?: Json
+          organization_id?: string
+          product_id?: string
+          published_at?: string | null
+          shop_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_publications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_publications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_publications_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_shops: {
         Row: {
           access_expires_at: string | null
@@ -2063,6 +2178,10 @@ export type Database = {
           last_days_sent: number | null
           skip_reason: string | null
         }[]
+      }
+      marketplace_publication_payload: {
+        Args: { p_publication: string }
+        Returns: Json
       }
       marketplace_finish_job: {
         Args: { p_job: number; p_ok: boolean; p_error?: string | null }

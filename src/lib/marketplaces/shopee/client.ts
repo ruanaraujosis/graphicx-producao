@@ -42,6 +42,8 @@ export async function shopeeRequest<T = Envelope>(input: {
   method?: "GET" | "POST";
   query?: Record<string, string | number | boolean | undefined>;
   body?: unknown;
+  /** Envio de arquivo (multipart); o fetch define o Content-Type. */
+  form?: FormData;
   shop?: ShopCredentials;
   onLog?: (log: CallLog) => void;
   fetchImpl?: typeof fetch;
@@ -76,7 +78,7 @@ export async function shopeeRequest<T = Envelope>(input: {
     const res = await (input.fetchImpl ?? fetch)(url, {
       method: input.method ?? "GET",
       headers: input.body === undefined ? undefined : { "Content-Type": "application/json" },
-      body: input.body === undefined ? undefined : JSON.stringify(input.body),
+      body: input.form ?? (input.body === undefined ? undefined : JSON.stringify(input.body)),
       signal: AbortSignal.timeout(20_000),
       cache: "no-store",
     });
