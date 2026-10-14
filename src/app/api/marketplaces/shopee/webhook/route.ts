@@ -8,12 +8,19 @@ export const maxDuration = 60;
 
 /** Códigos de aviso (push) da Shopee que a GraphicX trata. */
 const ORDER_STATUS_PUSH = 3;
+const TRACKING_NUMBER_PUSH = 4;
 
 type Push = {
   code?: number;
   shop_id?: number;
   timestamp?: number;
-  data?: { ordersn?: string; status?: string; update_time?: number };
+  data?: {
+    ordersn?: string;
+    status?: string;
+    update_time?: number;
+    tracking_no?: string;
+    package_number?: string;
+  };
 };
 
 /**
@@ -76,6 +83,13 @@ export async function POST(request: NextRequest) {
       p_dedupe: `${push.data.ordersn}:${push.data.status ?? ""}`,
     });
     after(() => processJobs(10).catch(() => undefined));
+  }
+  if (push.code === TRACKING_NUMBER_PUSH && push.data?.ordersn && push.data.tracking_no) {
+    await db
+      .from("orders")
+      .update({ tracking_code: push.data.tracking_no.slice(0, 60) })
+      .eq("shop_id", shop.id)
+      .eq("external_id", push.data.ordersn);
   }
   return new Response(null, { status: 200 });
 }

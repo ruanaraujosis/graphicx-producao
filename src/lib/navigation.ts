@@ -61,7 +61,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Truck,
     scope: "org",
     permission: "expedicao.ver",
-    comingSoon: true,
   },
   {
     href: "/cadastros",

@@ -3,6 +3,7 @@ import sharp from "sharp";
 import type { Database } from "@/lib/supabase/database.types";
 import { ShopeeError } from "./shopee/client";
 import { requireShopeeConfig } from "./shopee/config";
+import { arrangeShipment, getTrackingNumber, type ShipMode } from "./shopee/logistics";
 import {
   getOrderDetails,
   getOrderFee,
@@ -91,6 +92,19 @@ async function markListing(
 function itemError(e: unknown) {
   if (e instanceof ShopeeError && e.isAuth) throw e;
   return e instanceof Error ? e.message.slice(0, 1000) : "Erro ao enviar.";
+}
+
+/** Pedido da Shopee desta loja (conferido pela loja da tarefa). */
+async function shopOrder(shop: ShopRow, orderId: string | undefined) {
+  if (!orderId) throw new PermanentError("Pedido não informado.");
+  const { data } = await admin()
+    .from("orders")
+    .select("id, external_id, package_number, tracking_code, status")
+    .eq("id", orderId)
+    .eq("shop_id", shop.id)
+    .maybeSingle();
+  if (!data?.external_id) throw new PermanentError("Pedido da Shopee não encontrado nesta loja.");
+  return { ...data, external_id: data.external_id };
 }
 
 export const handlers: Record<string, JobHandler> = {
@@ -354,5 +368,58 @@ export const handlers: Record<string, JobHandler> = {
         .eq("id", pub.id);
       throw e;
     }
+  },
+
+  // Organiza o envio na Shopee (agência ou coleta) e busca o código de rastreio.
+  "shipment.arrange": async ({ job, shop }) => {
+    const order = await shopOrder(shop, (job.payload as { order_id?: string }).order_id);
+    if (order.status === "cancelado") throw new PermanentError("Pedido cancelado.");
+    const config = requireShopeeConfig();
+    const creds = await shopCredentials(shop);
+    const onLog = logger(shop);
+    const ref = { order_sn: order.external_id, package_number: order.package_number };
+    try {
+      await arrangeShipment(config, creds, ref, shop.ship_mode as ShipMode, { onLog });
+    } catch (e) {
+      // Erro de cadastro/transportadora: repetir não resolve.
+      if (e instanceof Error && !(e instanceof ShopeeError)) throw new PermanentError(e.message);
+      throw e;
+    }
+    const tracking = await getTrackingNumber(config, creds, ref, { onLog }).catch(() => null);
+    await admin()
+      .from("orders")
+      .update({
+        shipment_arranged_at: new Date().toISOString(),
+        external_status: "PROCESSED",
+        ...(tracking ? { tracking_code: tracking.slice(0, 60) } : {}),
+      })
+      .eq("id", order.id);
+    // O rastreio às vezes demora alguns minutos para sair.
+    if (!tracking) {
+      await admin().rpc("marketplace_enqueue", {
+        p_shop: shop.id,
+        p_kind: "shipment.tracking",
+        p_payload: { order_id: order.id },
+        p_dedupe: `tracking:${order.id}`,
+        p_run_after: new Date(Date.now() + 2 * 60_000).toISOString(),
+      });
+    }
+  },
+
+  // Busca o código de rastreio (tenta de novo com espera crescente até sair).
+  "shipment.tracking": async ({ job, shop }) => {
+    const order = await shopOrder(shop, (job.payload as { order_id?: string }).order_id);
+    if (order.tracking_code) return;
+    const tracking = await getTrackingNumber(
+      requireShopeeConfig(),
+      await shopCredentials(shop),
+      { order_sn: order.external_id, package_number: order.package_number },
+      { onLog: logger(shop) },
+    );
+    if (!tracking) throw new Error("A Shopee ainda não gerou o código de rastreio.");
+    await admin()
+      .from("orders")
+      .update({ tracking_code: tracking.slice(0, 60) })
+      .eq("id", order.id);
   },
 };

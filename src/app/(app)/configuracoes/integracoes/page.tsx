@@ -53,7 +53,7 @@ async function Integracoes({ searchParams }: { searchParams: Params }) {
     supabase
       .from("marketplace_shops")
       .select(
-        "id, marketplace, external_shop_id, name, region, status, stock_ratio, price_sync_enabled, chat_message_enabled, chat_template, last_sync_at, last_error, access_expires_at",
+        "id, marketplace, external_shop_id, name, region, status, stock_ratio, price_sync_enabled, ship_mode, chat_message_enabled, chat_template, last_sync_at, last_error, access_expires_at",
       )
       .eq("organization_id", org)
       .order("created_at"),

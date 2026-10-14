@@ -26,6 +26,7 @@ export async function saveShopSettings(id: string, input: unknown): Promise<Acti
       chat_message_enabled: v.chat_message_enabled,
       chat_template: v.chat_template,
       price_sync_enabled: v.price_sync_enabled,
+      ship_mode: v.ship_mode,
     })
     .eq("id", id)
     .eq("organization_id", membership.organizationId);

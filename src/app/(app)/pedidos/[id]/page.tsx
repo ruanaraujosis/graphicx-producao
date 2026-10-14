@@ -1,4 +1,4 @@
-import { FileText, MessageCircle, Pencil, Phone } from "lucide-react";
+import { FileText, MessageCircle, Pencil, Phone, QrCode } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -21,6 +21,8 @@ import {
   orderNumber,
   type OrderStatus,
 } from "@/lib/orders/status";
+import { ShopeeShipping } from "./shopee-shipping";
+import { SHOPEE_STATUS_LABELS } from "@/lib/marketplaces/shopee/labels";
 import { createClient } from "@/lib/supabase/server";
 import {
   ArtLinkBox,
@@ -61,7 +63,7 @@ async function Pedido({ params }: { params: Params }) {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, external_status, ship_by_at, package_number, channel_fee, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
+      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, external_status, ship_by_at, package_number, channel_fee, shipment_arranged_at, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
     )
     .eq("id", id)
     .eq("organization_id", membership.organizationId)
@@ -163,6 +165,12 @@ async function Pedido({ params }: { params: Params }) {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <a href={`/imprimir/pedidos?ids=${order.id}`} target="_blank" rel="noreferrer">
+              <QrCode />
+              QR Code
+            </a>
+          </Button>
           {editable && (
             <Button variant="outline" asChild>
               <Link href={`/pedidos/${order.id}/editar`}>
@@ -457,7 +465,7 @@ async function Pedido({ params }: { params: Params }) {
                 {order.external_status && (
                   <Row
                     label="Situação lá"
-                    value={EXTERNAL_STATUS[order.external_status] ?? order.external_status}
+                    value={SHOPEE_STATUS_LABELS[order.external_status] ?? order.external_status}
                   />
                 )}
                 {order.ship_by_at && (
@@ -465,6 +473,21 @@ async function Pedido({ params }: { params: Params }) {
                 )}
                 {order.package_number && <Row label="Pacote" value={order.package_number} />}
               </dl>
+              {order.channel === "shopee" && status !== "cancelado" && (
+                <ShopeeShipping
+                  orderId={order.id}
+                  canArrange={
+                    !order.shipment_arranged_at &&
+                    ["READY_TO_SHIP", "RETRY_SHIP"].includes(order.external_status ?? "")
+                  }
+                  hasLabel={
+                    Boolean(order.shipment_arranged_at) ||
+                    ["PROCESSED", "SHIPPED"].includes(order.external_status ?? "")
+                  }
+                  canManage={can(perms, "expedicao.gerenciar")}
+                  canTrack={Boolean(order.tracking_code)}
+                />
+              )}
             </Card>
           )}
 
@@ -565,20 +588,6 @@ function Card({
     </section>
   );
 }
-
-/** Situação do pedido na Shopee, em português. */
-const EXTERNAL_STATUS: Record<string, string> = {
-  UNPAID: "Aguardando pagamento",
-  READY_TO_SHIP: "Pronto para envio",
-  PROCESSED: "Etiqueta gerada",
-  RETRY_SHIP: "Reenvio",
-  SHIPPED: "Enviado",
-  TO_CONFIRM_RECEIVE: "Aguardando confirmação do comprador",
-  IN_CANCEL: "Cancelamento solicitado",
-  CANCELLED: "Cancelado",
-  TO_RETURN: "Devolução",
-  COMPLETED: "Concluído",
-};
 
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (

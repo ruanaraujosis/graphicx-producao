@@ -44,6 +44,8 @@ export async function shopeeRequest<T = Envelope>(input: {
   body?: unknown;
   /** Envio de arquivo (multipart); o fetch define o Content-Type. */
   form?: FormData;
+  /** Resposta em arquivo (PDF da etiqueta): devolve os bytes. Erros continuam vindo em JSON. */
+  binary?: boolean;
   shop?: ShopCredentials;
   onLog?: (log: CallLog) => void;
   fetchImpl?: typeof fetch;
@@ -83,6 +85,18 @@ export async function shopeeRequest<T = Envelope>(input: {
       cache: "no-store",
     });
     status = res.status;
+    if (input.binary && res.ok && !(res.headers.get("content-type") ?? "").includes("json")) {
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      input.onLog?.({
+        endpoint: path,
+        ok: true,
+        statusCode: status,
+        durationMs: Date.now() - started,
+        requestId: null,
+        error: null,
+      });
+      return bytes as T;
+    }
     json = (await res.json().catch(() => null)) as Envelope | null;
     if (!res.ok || !json || json.error) {
       throw new ShopeeError(

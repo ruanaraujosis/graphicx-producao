@@ -19,6 +19,7 @@ export function ShopActions({
     name: string | null;
     stock_ratio: number;
     price_sync_enabled: boolean;
+    ship_mode: string;
     chat_message_enabled: boolean;
     chat_template: string | null;
     status: string;
@@ -85,6 +86,7 @@ export function ShopActions({
           name: shop.name ?? "",
           stock_pct: String(Math.round(shop.stock_ratio * 100)),
           price_sync_enabled: shop.price_sync_enabled,
+          ship_mode: shop.ship_mode,
           chat_message_enabled: shop.chat_message_enabled,
           chat_template: shop.chat_template ?? DEFAULT_CHAT_TEMPLATE,
         }}
@@ -95,6 +97,16 @@ export function ShopActions({
             label: "Estoque enviado (% da disponibilidade)",
             type: "number",
             hint: "Margem de segurança: com 90%, se dá para produzir 100, a Shopee recebe 90.",
+          },
+          {
+            name: "ship_mode",
+            label: "Entrega dos pacotes à transportadora",
+            type: "select",
+            options: [
+              { value: "dropoff", label: "Levar até a agência" },
+              { value: "pickup", label: "Coleta no endereço da loja" },
+            ],
+            hint: "Usado em “Organizar envio”. Se a Shopee não aceitar o modo escolhido, o outro é usado.",
           },
           {
             name: "price_sync_enabled",

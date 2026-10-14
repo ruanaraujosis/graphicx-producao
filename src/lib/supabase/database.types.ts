@@ -356,6 +356,7 @@ export type Database = {
           stock_ratio: number
           orders_synced_until: string | null
           price_sync_enabled: boolean
+          ship_mode: string
           updated_at: string
         }
         Insert: {
@@ -379,6 +380,7 @@ export type Database = {
           stock_ratio?: number
           orders_synced_until?: string | null
           price_sync_enabled?: boolean
+          ship_mode?: string
           updated_at?: string
         }
         Update: {
@@ -402,6 +404,7 @@ export type Database = {
           stock_ratio?: number
           orders_synced_until?: string | null
           price_sync_enabled?: boolean
+          ship_mode?: string
           updated_at?: string
         }
         Relationships: [
@@ -707,6 +710,7 @@ export type Database = {
         Row: {
           package_number: string | null;
           channel_fee: number | null;
+          shipment_arranged_at: string | null;
           ship_by_at: string | null;
           external_status: string | null;
           shop_id: string | null;
@@ -741,6 +745,7 @@ export type Database = {
         Insert: {
           package_number?: string | null;
           channel_fee?: number | null;
+          shipment_arranged_at?: string | null;
           ship_by_at?: string | null;
           external_status?: string | null;
           shop_id?: string | null;
@@ -775,6 +780,7 @@ export type Database = {
         Update: {
           package_number?: string | null;
           channel_fee?: number | null;
+          shipment_arranged_at?: string | null;
           ship_by_at?: string | null;
           external_status?: string | null;
           shop_id?: string | null;

@@ -11,6 +11,11 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 - **Integrações:** Configurações → Integrações com o botão "Conectar loja da Shopee" (autorização OAuth; tokens no Supabase Vault com renovação automática), situação de cada loja, fila de sincronização com novas tentativas e últimas chamadas.
 - **Pedidos da Shopee** entram sozinhos ao serem pagos (aviso da Shopee + conferência a cada 15 min), sem duplicar, com itens ligados pelo anúncio ou pelo SKU, prazo de postagem, cancelamento e envio vindos da Shopee e a **taxa real** do repasse na conta a receber.
 
+- **Anúncios e estoque:** importação dos anúncios com vínculo pelo SKU, envio de estoque com margem de segurança por loja, preço do canal Shopee (ligado por loja) e prazo de postagem (pré-encomenda acima de 3 dias).
+- **Publicar na Shopee** a partir do cadastro: categoria, atributos, formas de envio, fotos e variações, com conferência do que falta antes de publicar.
+- **Expedição:** organizar o envio da Shopee em lote (agência ou coleta), etiquetas de envio da Shopee em um PDF só e rastreio do pedido.
+- **QR Code de identificação** em cada pedido (e em lote na Expedição): etiqueta 10×15 cm ou folha A4 com número, cliente, prazo e itens; o QR abre o pedido no GraphicX.
+
 #### Removido
 
 - **Magalu e TikTok Shop** saem do produto: a GraphicX integra somente a Shopee. Canais retirados do banco, das telas e dos preços por canal.
