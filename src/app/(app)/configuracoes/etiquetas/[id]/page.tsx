@@ -7,6 +7,7 @@ import { templateImageUrls, toTemplate } from "@/lib/labels/load";
 import { KIND_LABELS } from "@/lib/labels/template";
 import { orderQrSvg } from "@/lib/orders/qrcode";
 import { createClient } from "@/lib/supabase/server";
+import { DeleteTemplateButton } from "../templates-client";
 import { LabelEditor } from "./label-editor";
 
 export const metadata = { title: "Editar modelo de etiqueta" };
@@ -47,6 +48,13 @@ async function Editor({ params }: { params: Props["params"] }) {
       <PageHeader
         title={template.name}
         description={`${KIND_LABELS[template.kind]} · ${template.width_mm} × ${template.height_mm} mm`}
+        actions={
+          <DeleteTemplateButton
+            id={template.id!}
+            name={template.name}
+            redirectTo="/configuracoes/etiquetas"
+          />
+        }
       />
       <LabelEditor
         id={template.id!}

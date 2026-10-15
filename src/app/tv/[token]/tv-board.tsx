@@ -33,7 +33,8 @@ export function TvBoard({ token, initial }: { token: string; initial: TvSnapshot
           setData(next);
           setOffline(false);
         } else {
-          setOffline(true);
+          // TV desligada ou excluída: recarrega para mostrar o aviso e o "Conectar com código".
+          window.location.reload();
         }
       } catch {
         setOffline(true);

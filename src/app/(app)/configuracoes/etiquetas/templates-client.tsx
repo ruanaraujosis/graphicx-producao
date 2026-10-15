@@ -34,11 +34,25 @@ export function MakeDefaultButton({ id, kind }: { id: string | null; kind: Label
   );
 }
 
-export function DeleteTemplateButton({ id, name }: { id: string; name: string }) {
+export function DeleteTemplateButton({
+  id,
+  name,
+  redirectTo,
+}: {
+  id: string;
+  name: string;
+  /** Para onde ir depois de excluir (no editor, volta para a lista). */
+  redirectTo?: string;
+}) {
+  const router = useRouter();
   return (
     <ConfirmButton
       trigger={
-        <Button variant="ghost" size="sm" className="min-h-11 text-destructive md:min-h-8">
+        <Button
+          variant="outline"
+          size="sm"
+          className="min-h-11 border-destructive/40 text-destructive hover:bg-destructive/10 md:min-h-8"
+        >
           <Trash2 />
           Excluir
         </Button>
@@ -46,7 +60,11 @@ export function DeleteTemplateButton({ id, name }: { id: string; name: string })
       title={`Excluir o modelo “${name}”?`}
       description="As próximas impressões passam a usar o modelo padrão."
       confirmLabel="Excluir"
-      action={() => deleteTemplate(id)}
+      action={async () => {
+        const r = await deleteTemplate(id);
+        if (r.ok && redirectTo) router.push(redirectTo);
+        return r;
+      }}
     />
   );
 }

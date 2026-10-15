@@ -470,6 +470,54 @@ export type Database = {
           },
         ]
       }
+      tv_pairings: {
+        Row: {
+          code: string
+          created_at: string
+          device_id: string | null
+          expires_at: string
+          id: string
+          linked_at: string | null
+          organization_id: string | null
+          secret_hash: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          device_id?: string | null
+          expires_at?: string
+          id?: string
+          linked_at?: string | null
+          organization_id?: string | null
+          secret_hash: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          device_id?: string | null
+          expires_at?: string
+          id?: string
+          linked_at?: string | null
+          organization_id?: string | null
+          secret_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_pairings_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "tv_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tv_pairings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tv_devices: {
         Row: {
           created_at: string
