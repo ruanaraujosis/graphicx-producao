@@ -65,7 +65,7 @@ async function Pedido({ params }: { params: Params }) {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, shop_id, external_status, ship_by_at, package_number, channel_fee, shipment_arranged_at, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
+      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, shop_id, external_status, ship_by_at, package_number, channel_fee, shipment_arranged_at, chat_sent_at, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
     )
     .eq("id", id)
     .eq("organization_id", membership.organizationId)
@@ -492,6 +492,12 @@ async function Pedido({ params }: { params: Params }) {
                   <Row label="Postar até" value={formatDateTime(order.ship_by_at)} strong />
                 )}
                 {order.package_number && <Row label="Pacote" value={order.package_number} />}
+                {order.chat_sent_at && (
+                  <Row
+                    label="Link da arte no chat"
+                    value={`Enviado ${formatDateTime(order.chat_sent_at)}`}
+                  />
+                )}
               </dl>
               {order.channel === "shopee" && status !== "cancelado" && (
                 <ShopeeShipping

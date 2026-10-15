@@ -1,6 +1,9 @@
 import "server-only";
 import sharp from "sharp";
+import { getPublicEnv } from "@/lib/env";
+import { orderNumber } from "@/lib/orders/status";
 import type { Database } from "@/lib/supabase/database.types";
+import { chatMessage, DEFAULT_CHAT_TEMPLATE, isChatNotAllowed, sendChatText } from "./shopee/chat";
 import { ShopeeError } from "./shopee/client";
 import { requireShopeeConfig } from "./shopee/config";
 import { arrangeShipment, getTrackingNumber, type ShipMode } from "./shopee/logistics";
@@ -105,6 +108,34 @@ async function shopOrder(shop: ShopRow, orderId: string | undefined) {
     .maybeSingle();
   if (!data?.external_id) throw new PermanentError("Pedido da Shopee não encontrado nesta loja.");
   return { ...data, external_id: data.external_id };
+}
+
+/**
+ * Link ativo de arte do pedido. Reaproveita um link válido por mais de 7 dias
+ * (criar outro desativaria o que o cliente já recebeu).
+ */
+async function artLinkUrl(order: { id: string; organization_id: string }) {
+  const db = admin();
+  const { data: current } = await db
+    .from("art_links")
+    .select("token")
+    .eq("order_id", order.id)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date(Date.now() + 7 * 86_400_000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let link = current;
+  if (!link) {
+    const { data, error } = await db
+      .from("art_links")
+      .insert({ organization_id: order.organization_id, order_id: order.id })
+      .select("token")
+      .single();
+    if (error || !data) throw new Error(`Link de arte: ${error?.message ?? "erro"}`);
+    link = data;
+  }
+  return new URL(`/a/${link.token}`, getPublicEnv().NEXT_PUBLIC_APP_URL).toString();
 }
 
 export const handlers: Record<string, JobHandler> = {
@@ -421,5 +452,61 @@ export const handlers: Record<string, JobHandler> = {
       .from("orders")
       .update({ tracking_code: tracking.slice(0, 60) })
       .eq("id", order.id);
+  },
+
+  // Mensagem automática no chat após a compra, com o link para enviar a arte.
+  "chat.welcome": async ({ job, shop }) => {
+    if (!shop.chat_message_enabled) return;
+    const orderId = (job.payload as { order_id?: string }).order_id;
+    if (!orderId) throw new PermanentError("Pedido não informado.");
+    const db = admin();
+    const { data: order } = await db
+      .from("orders")
+      .select(
+        "id, organization_id, number, external_id, external_buyer_id, needs_art, status, chat_sent_at",
+      )
+      .eq("id", orderId)
+      .eq("shop_id", shop.id)
+      .maybeSingle();
+    if (!order) throw new PermanentError("Pedido não encontrado nesta loja.");
+    // Já enviada, cancelado ou sem arte: nada a fazer.
+    if (order.chat_sent_at || order.status === "cancelado" || !order.needs_art) return;
+    if (!order.external_buyer_id)
+      throw new PermanentError("A Shopee não informou o comprador deste pedido.");
+
+    const text = chatMessage(shop.chat_template || DEFAULT_CHAT_TEMPLATE, {
+      loja: shop.name ?? "nossa loja",
+      pedido: order.external_id ?? orderNumber(order.number),
+      link: await artLinkUrl(order),
+    });
+    try {
+      await sendChatText(
+        requireShopeeConfig(),
+        await shopCredentials(shop),
+        order.external_buyer_id,
+        text,
+        { onLog: logger(shop) },
+      );
+    } catch (e) {
+      if (isChatNotAllowed(e)) {
+        await db
+          .from("marketplace_shops")
+          .update({
+            last_error:
+              "A Shopee não liberou o chat para esta conta: a mensagem automática não foi enviada. Desligue a opção em Ajustes ou peça a liberação à Shopee.",
+          })
+          .eq("id", shop.id);
+        throw new PermanentError("Chat não liberado pela Shopee para esta conta.");
+      }
+      throw e;
+    }
+    await db.from("orders").update({ chat_sent_at: new Date().toISOString() }).eq("id", order.id);
+    await db.from("order_events").insert({
+      organization_id: order.organization_id,
+      order_id: order.id,
+      type: "link_arte",
+      message: "Link da arte enviado ao comprador pelo chat da Shopee.",
+      actor_label: "Shopee",
+    });
   },
 };

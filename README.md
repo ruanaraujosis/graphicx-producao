@@ -184,4 +184,6 @@ Para ativar a integração em um ambiente (uma vez, pela equipe da GraphicX):
 
 Sem essas variáveis, a tela mostra que a conexão "será liberada em breve" e nada é chamado.
 
+Mensagem no chat: com a opção ligada na loja, cada pedido novo que precisa de arte recebe pelo chat da Shopee o link para enviar a arte (API Seller Chat; a Shopee precisa liberar o chat para o app).
+
 Como funciona: avisos da Shopee e rotinas (renovação de token a cada 15 min, conferência de pedidos) viram tarefas em `marketplace_jobs`; o processador (`src/lib/marketplaces/worker.ts`) as executa com novas tentativas (espera exponencial, até 6). Cada chamada fica em `marketplace_logs`, visível na tela de Integrações.

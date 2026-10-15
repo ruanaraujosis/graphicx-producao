@@ -764,6 +764,8 @@ export type Database = {
           package_number: string | null;
           channel_fee: number | null;
           shipment_arranged_at: string | null;
+          external_buyer_id: string | null;
+          chat_sent_at: string | null;
           ship_by_at: string | null;
           external_status: string | null;
           shop_id: string | null;
@@ -799,6 +801,8 @@ export type Database = {
           package_number?: string | null;
           channel_fee?: number | null;
           shipment_arranged_at?: string | null;
+          external_buyer_id?: string | null;
+          chat_sent_at?: string | null;
           ship_by_at?: string | null;
           external_status?: string | null;
           shop_id?: string | null;
@@ -834,6 +838,8 @@ export type Database = {
           package_number?: string | null;
           channel_fee?: number | null;
           shipment_arranged_at?: string | null;
+          external_buyer_id?: string | null;
+          chat_sent_at?: string | null;
           ship_by_at?: string | null;
           external_status?: string | null;
           shop_id?: string | null;

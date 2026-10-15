@@ -10,5 +10,4 @@ export const shopSettingsSchema = z.object({
   chat_template: optionalText(1000),
 });
 
-export const DEFAULT_CHAT_TEMPLATE =
-  "Olá! Obrigado pela compra na {loja}. Envie a arte do seu pedido {pedido} por este link: {link}";
+export { DEFAULT_CHAT_TEMPLATE } from "@/lib/marketplaces/shopee/chat";

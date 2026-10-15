@@ -35,6 +35,7 @@ export type ShopeeOrder = {
   update_time?: number;
   ship_by_date?: number;
   buyer_username?: string;
+  buyer_user_id?: number;
   message_to_seller?: string;
   cancel_reason?: string;
   item_list?: ShopeeOrderItem[];
@@ -47,6 +48,8 @@ export type NeutralOrder = {
   external_status: string;
   target_status: "novo" | "enviado" | "entregue" | "cancelado" | null;
   customer_name: string | null;
+  /** Id do comprador na Shopee (para o chat). */
+  buyer_id: string | null;
   ship_by_at: string | null;
   package_number: string | null;
   notes: string | null;
@@ -65,7 +68,7 @@ export type NeutralOrder = {
 /** Até 15 dias por consulta (limite da Shopee). */
 export const ORDER_LIST_MAX_RANGE_S = 15 * 24 * 60 * 60;
 const DETAIL_FIELDS =
-  "buyer_username,item_list,ship_by_date,package_list,message_to_seller,cancel_reason,total_amount";
+  "buyer_username,buyer_user_id,item_list,ship_by_date,package_list,message_to_seller,cancel_reason,total_amount";
 
 /** Tradução do status da Shopee para o status da GraphicX (nulo = ainda não pago). */
 export function targetStatus(status: string): NeutralOrder["target_status"] {
@@ -103,6 +106,7 @@ export function toNeutralOrder(o: ShopeeOrder, fee: number | null = null): Neutr
     external_status: o.order_status,
     target_status: targetStatus(o.order_status),
     customer_name: o.buyer_username ?? null,
+    buyer_id: o.buyer_user_id ? String(o.buyer_user_id) : null,
     ship_by_at: o.ship_by_date ? new Date(o.ship_by_date * 1000).toISOString() : null,
     package_number: o.package_list?.find((p) => p.package_number)?.package_number ?? null,
     notes: o.message_to_seller?.trim()
