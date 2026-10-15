@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MonitorX } from "lucide-react";
 import { Suspense } from "react";
 import { loadTvSnapshot } from "./data";
+import { ForgetTv } from "./forget-tv";
 import { TvBoard } from "./tv-board";
 
 export const metadata: Metadata = {
@@ -30,8 +31,9 @@ async function Painel({ params }: { params: PageProps<"/tv/[token]">["params"] }
         <MonitorX className="size-16 text-muted-foreground" aria-hidden />
         <h1 className="text-3xl font-bold">TV desligada ou link inválido</h1>
         <p className="text-xl text-muted-foreground">
-          Peça um link novo em Configurações → Dispositivos de TV.
+          Conecte de novo com um código: é só tocar abaixo.
         </p>
+        <ForgetTv />
       </main>
     );
   }

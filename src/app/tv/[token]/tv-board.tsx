@@ -1,6 +1,15 @@
 "use client";
 
-import { AlarmClock, Boxes, Factory, Maximize, Palette, Store, TrendingUp } from "lucide-react";
+import {
+  AlarmClock,
+  Boxes,
+  Cast,
+  Factory,
+  Maximize,
+  Palette,
+  Store,
+  TrendingUp,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "cn";
 import { LogoMark } from "@/components/brand/logo";
@@ -10,10 +19,12 @@ import { formatCurrency } from "@/lib/format";
 import { dueRisk, formatDueDate } from "@/lib/orders/deadline";
 import { BOARD_STATUSES, STATUS_LABELS, orderNumber } from "@/lib/orders/status";
 import { formatQuantity, type Unit } from "@/lib/stock/units";
-import { refreshTv } from "./actions";
+import { refreshTv, tvCommand } from "./actions";
 import type { TvSnapshot } from "./data";
 
 const REFRESH_MS = 30_000;
+/** Intervalo para ver se alguém mandou uma tela pelo "Reproduzir na TV". */
+const CAST_POLL_MS = 4_000;
 
 type Screen = { key: string; title: string; icon: typeof Factory; render: () => React.ReactNode };
 
@@ -33,7 +44,8 @@ export function TvBoard({ token, initial }: { token: string; initial: TvSnapshot
           setData(next);
           setOffline(false);
         } else {
-          setOffline(true);
+          // TV desligada ou excluída: recarrega para mostrar o aviso e o "Conectar com código".
+          window.location.reload();
         }
       } catch {
         setOffline(true);
@@ -53,17 +65,43 @@ export function TvBoard({ token, initial }: { token: string; initial: TvSnapshot
     };
   }, []);
 
-  const screens = useMemo(() => buildScreens(data), [data]);
-  const current = screens[index % screens.length];
-
-  // Rotação automática.
+  // "Reproduzir na TV": alguém do GraphicX fixou uma tela (consulta leve a cada 4 s).
+  const [cast, setCast] = useState<{ screen: string | null; by: string | null }>({
+    screen: null,
+    by: null,
+  });
   useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const c = await tvCommand(token);
+        if (!c.active) {
+          window.location.reload();
+          return;
+        }
+        setCast((prev) =>
+          prev.screen === c.screen && prev.by === c.by ? prev : { screen: c.screen, by: c.by },
+        );
+      } catch {
+        // Sem conexão: o aviso aparece na próxima atualização dos dados.
+      }
+    }, CAST_POLL_MS);
+    return () => clearInterval(id);
+  }, [token]);
+
+  const screens = useMemo(() => buildScreens(data), [data]);
+  const pinned = cast.screen ? screens.findIndex((s) => s.key === cast.screen) : -1;
+  const shown = pinned >= 0 ? pinned : index % screens.length;
+  const current = screens[shown];
+
+  // Rotação automática (pausada enquanto uma tela está sendo reproduzida).
+  useEffect(() => {
+    if (pinned >= 0) return;
     const id = setInterval(
       () => setIndex((i) => (i + 1) % screens.length),
       data.rotation_seconds * 1000,
     );
     return () => clearInterval(id);
-  }, [screens.length, data.rotation_seconds]);
+  }, [screens.length, data.rotation_seconds, pinned]);
 
   const Icon = current.icon;
   return (
@@ -98,6 +136,12 @@ export function TvBoard({ token, initial }: { token: string; initial: TvSnapshot
       <div className="flex items-center gap-3">
         <Icon className="size-9 text-primary" aria-hidden />
         <h1 className="text-4xl font-bold tracking-tight">{current.title}</h1>
+        {pinned >= 0 && (
+          <span className="flex items-center gap-2 rounded-full bg-primary/15 px-4 py-1 text-lg font-medium text-primary">
+            <Cast className="size-5" aria-hidden />
+            Reproduzindo{cast.by ? ` — enviado por ${cast.by}` : ""}
+          </span>
+        )}
         {offline && (
           <span className="ml-auto rounded-full bg-destructive px-4 py-1 text-lg font-semibold text-white">
             Sem conexão — mostrando os últimos dados
@@ -112,10 +156,7 @@ export function TvBoard({ token, initial }: { token: string; initial: TvSnapshot
           {screens.map((s, i) => (
             <span
               key={s.key}
-              className={cn(
-                "h-2.5 w-10 rounded-full",
-                i === index % screens.length ? "bg-primary" : "bg-muted",
-              )}
+              className={cn("h-2.5 w-10 rounded-full", i === shown ? "bg-primary" : "bg-muted")}
             />
           ))}
         </div>

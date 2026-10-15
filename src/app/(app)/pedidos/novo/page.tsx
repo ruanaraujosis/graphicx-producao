@@ -13,7 +13,7 @@ export default function NovoPedidoPage() {
       <BackLink href="/pedidos" label="Pedidos" />
       <PageHeader
         title="Novo pedido"
-        description="Balcão, WhatsApp ou orçamento. Pedidos dos marketplaces chegam sozinhos (Shopee em breve)."
+        description="Balcão, WhatsApp ou orçamento. Pedidos da Shopee chegam sozinhos pela integração."
       />
       <Suspense fallback={<ListSkeleton />}>
         <NovoPedido />

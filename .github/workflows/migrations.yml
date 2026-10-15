@@ -35,7 +35,7 @@ jobs:
       - uses: supabase/setup-cli@v1
         if: env.SKIP != '1'
         with:
-          version: latest
+          version: 2.120.0
       - if: env.SKIP != '1'
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
       - if: env.SKIP != '1'

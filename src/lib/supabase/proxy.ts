@@ -10,8 +10,12 @@ const PUBLIC_PATHS = [
   "/auth/confirm",
   // Link do cliente para enviar arte e aprovar a prova (token no caminho).
   "/a",
-  // Painel da TV (token de dispositivo no caminho, só leitura).
+  // Painel da TV (token de dispositivo no caminho, só leitura) e a tela de conectar com código.
   "/tv",
+  "/api/tv/pareamento",
+  // Avisos dos marketplaces (assinatura conferida na rota) e o processador da fila (segredo).
+  "/api/marketplaces/shopee/webhook",
+  "/api/marketplaces/worker",
   "/manifest.webmanifest",
   "/icon",
   "/apple-icon",

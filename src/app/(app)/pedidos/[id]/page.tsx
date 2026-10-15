@@ -1,4 +1,4 @@
-import { FileText, MessageCircle, Pencil, Phone } from "lucide-react";
+import { FileText, MessageCircle, Pencil, Phone, Tag } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -21,6 +21,10 @@ import {
   orderNumber,
   type OrderStatus,
 } from "@/lib/orders/status";
+import { orderQrPng, orderUrl } from "@/lib/orders/qrcode";
+import { OrderQrDialog } from "./order-qr-dialog";
+import { ShopeeShipping } from "./shopee-shipping";
+import { SHOPEE_STATUS_LABELS } from "@/lib/marketplaces/shopee/labels";
 import { createClient } from "@/lib/supabase/server";
 import {
   ArtLinkBox,
@@ -61,7 +65,7 @@ async function Pedido({ params }: { params: Params }) {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
+      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, shop_id, external_status, ship_by_at, package_number, channel_fee, shipment_arranged_at, chat_sent_at, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
     )
     .eq("id", id)
     .eq("organization_id", membership.organizationId)
@@ -143,6 +147,7 @@ async function Pedido({ params }: { params: Params }) {
   const artStage =
     status !== "orcamento" && status !== "cancelado" && isBefore(status, "em_impressao");
   const phone = order.customer_phone ? digits(order.customer_phone) : "";
+  const qrPng = await orderQrPng(order.id);
 
   return (
     <>
@@ -163,6 +168,29 @@ async function Pedido({ params }: { params: Params }) {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
+          <OrderQrDialog
+            orderId={order.id}
+            label={orderNumber(order.number)}
+            png={qrPng}
+            url={orderUrl(order.id)}
+          />
+          {status !== "cancelado" && status !== "orcamento" && (
+            <Button variant="outline" asChild>
+              <a
+                href={
+                  // Etiqueta oficial só para pedido que veio da Shopee; os outros usam o modelo da gráfica.
+                  order.external_id && order.shop_id
+                    ? `/api/marketplaces/shopee/etiquetas?pedidos=${order.id}&tipo=termica`
+                    : `/imprimir/envio?ids=${order.id}`
+                }
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Tag />
+                Etiqueta de envio
+              </a>
+            </Button>
+          )}
           {editable && (
             <Button variant="outline" asChild>
               <Link href={`/pedidos/${order.id}/editar`}>
@@ -431,8 +459,59 @@ async function Pedido({ params }: { params: Params }) {
               <Row label="Pagamento" value={order.payment_methods?.name ?? "Não informado"} />
               <Row label="Criado em" value={formatDateTime(order.created_at)} />
               {order.tracking_code && <Row label="Rastreio" value={order.tracking_code} />}
+              {order.channel_fee != null && (
+                <>
+                  <Row
+                    label="Taxas do marketplace"
+                    value={`− ${formatCurrency(order.channel_fee)}`}
+                  />
+                  <Row
+                    label="Você recebe"
+                    value={formatCurrency(order.total - order.channel_fee)}
+                    strong
+                  />
+                </>
+              )}
             </dl>
           </Card>
+
+          {order.external_id && (
+            <Card title="Marketplace">
+              <dl className="flex flex-col gap-1.5 text-sm">
+                {order.marketplace_shops?.name && (
+                  <Row label="Loja" value={order.marketplace_shops.name} />
+                )}
+                <Row label="Pedido" value={order.external_id} />
+                {order.external_status && (
+                  <Row
+                    label="Situação lá"
+                    value={SHOPEE_STATUS_LABELS[order.external_status] ?? order.external_status}
+                  />
+                )}
+                {order.ship_by_at && (
+                  <Row label="Postar até" value={formatDateTime(order.ship_by_at)} strong />
+                )}
+                {order.package_number && <Row label="Pacote" value={order.package_number} />}
+                {order.chat_sent_at && (
+                  <Row
+                    label="Link da arte no chat"
+                    value={`Enviado ${formatDateTime(order.chat_sent_at)}`}
+                  />
+                )}
+              </dl>
+              {order.channel === "shopee" && status !== "cancelado" && (
+                <ShopeeShipping
+                  orderId={order.id}
+                  canArrange={
+                    !order.shipment_arranged_at &&
+                    ["READY_TO_SHIP", "RETRY_SHIP"].includes(order.external_status ?? "")
+                  }
+                  canManage={can(perms, "expedicao.gerenciar")}
+                  canTrack={Boolean(order.tracking_code)}
+                />
+              )}
+            </Card>
+          )}
 
           <Card title="Cliente">
             <p className="font-medium">{order.customer_name}</p>

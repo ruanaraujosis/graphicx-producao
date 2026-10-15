@@ -7,23 +7,29 @@ import { IconChip } from "@/components/kit/stat-card";
 import { requireOrg } from "@/lib/auth/dal";
 import { formatDateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { NewTvButton, RotationDialog, TvDeviceActions } from "./tv-client";
+import { ConnectTvDialog, NewTvButton, RotationDialog, TvDeviceActions } from "./tv-client";
 
 export const metadata = { title: "Dispositivos de TV" };
 
-export default function TvConfigPage() {
+export default function TvConfigPage({ searchParams }: PageProps<"/configuracoes/tv">) {
   return (
     <div className="flex flex-col gap-6">
       <BackLink href="/configuracoes" label="Configurações" />
       <Suspense fallback={<ListSkeleton />}>
-        <Dispositivos />
+        <Dispositivos searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function Dispositivos() {
+async function Dispositivos({
+  searchParams,
+}: {
+  searchParams: PageProps<"/configuracoes/tv">["searchParams"];
+}) {
   const { membership } = await requireOrg("configuracoes.gerenciar");
+  const raw = await searchParams;
+  const code = typeof raw.codigo === "string" ? raw.codigo.slice(0, 8) : null;
   const org = membership.organizationId;
   const supabase = await createClient();
   const [{ data: devices }, { data: settings }] = await Promise.all([
@@ -50,22 +56,33 @@ async function Dispositivos() {
           <>
             <RotationDialog seconds={settings?.tv_rotation_seconds ?? 15} />
             <NewTvButton />
+            <ConnectTvDialog
+              devices={list.map((d) => ({
+                id: d.id,
+                name: d.name,
+                revoked: Boolean(d.revoked_at),
+              }))}
+              initialCode={code}
+            />
           </>
         }
       />
 
-      <ol className="grid gap-2 rounded-2xl border bg-card p-4 text-sm shadow-sm md:grid-cols-3">
+      <ul className="grid gap-3 rounded-2xl border bg-card p-4 text-sm shadow-sm md:grid-cols-3">
         <li>
-          <strong>1.</strong> Crie a TV aqui e toque em <em>Copiar link</em>.
+          <strong>Com código (como no YouTube):</strong> no navegador da TV, abra o endereço do
+          GraphicX com <code className="font-mono">/tv</code> no fim. Ela mostra um código; toque em{" "}
+          <em>Conectar TV</em> e digite, ou leia o QR da TV com o celular.
         </li>
         <li>
-          <strong>2.</strong> Abra o link no navegador da TV (ou de um computador ligado nela).
+          <strong>Transmitir:</strong> com uma TV com Chromecast na mesma rede, toque em{" "}
+          <em>Transmitir</em> na TV da lista (Chrome do computador ou do Android).
         </li>
         <li>
-          <strong>3.</strong> Toque na tela para entrar em tela cheia. O painel atualiza sozinho a
-          cada 30 s.
+          <strong>Por link:</strong> crie a TV, toque em <em>Copiar link</em> e abra no navegador da
+          TV. O painel atualiza sozinho a cada 30 s.
         </li>
-      </ol>
+      </ul>
 
       {list.length === 0 ? (
         <p className="rounded-2xl border border-dashed bg-card px-6 py-12 text-center text-sm text-muted-foreground">

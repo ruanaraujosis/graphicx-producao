@@ -3,14 +3,13 @@
  * que substitui a regra. Mesma regra de `public.variant_price()` no banco (há teste).
  */
 
-export const SALES_CHANNELS = ["balcao", "shopee", "magalu", "tiktok", "whatsapp"] as const;
+/** Canais de venda (a GraphicX integra só a Shopee como marketplace). */
+export const SALES_CHANNELS = ["balcao", "shopee", "whatsapp"] as const;
 export type SalesChannel = (typeof SALES_CHANNELS)[number];
 
 export const CHANNEL_LABELS: Record<SalesChannel, string> = {
   balcao: "Balcão",
   shopee: "Shopee",
-  magalu: "Magalu",
-  tiktok: "TikTok Shop",
   whatsapp: "WhatsApp",
 };
 

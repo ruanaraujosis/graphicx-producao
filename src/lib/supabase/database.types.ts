@@ -7,12 +7,526 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      marketplace_logs: {
+        Row: {
+          created_at: string
+          direction: string
+          duration_ms: number | null
+          endpoint: string
+          error: string | null
+          id: number
+          ok: boolean
+          organization_id: string
+          request_id: string | null
+          shop_id: string | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          duration_ms?: number | null
+          endpoint: string
+          error?: string | null
+          id?: never
+          ok: boolean
+          organization_id: string
+          request_id?: string | null
+          shop_id?: string | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          duration_ms?: number | null
+          endpoint?: string
+          error?: string | null
+          id?: never
+          ok?: boolean
+          organization_id?: string
+          request_id?: string | null
+          shop_id?: string | null
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_logs_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          dedupe_key: string | null
+          finished_at: string | null
+          id: number
+          kind: string
+          last_error: string | null
+          organization_id: string
+          payload: Json
+          run_after: string
+          shop_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          dedupe_key?: string | null
+          finished_at?: string | null
+          id?: never
+          kind: string
+          last_error?: string | null
+          organization_id: string
+          payload?: Json
+          run_after?: string
+          shop_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          dedupe_key?: string | null
+          finished_at?: string | null
+          id?: never
+          kind?: string
+          last_error?: string | null
+          organization_id?: string
+          payload?: Json
+          run_after?: string
+          shop_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_jobs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_jobs_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_listings: {
+        Row: {
+          created_at: string
+          external_item_id: string
+          external_model_id: string
+          external_sku: string | null
+          external_price: number | null
+          external_stock: number | null
+          last_days_sent: number | null
+          id: string
+          last_price_sent: number | null
+          last_stock_sent: number | null
+          last_synced_at: string | null
+          organization_id: string
+          shop_id: string
+          status: string
+          sync_error: string | null
+          title: string | null
+          updated_at: string
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          external_item_id: string
+          external_model_id?: string
+          external_sku?: string | null
+          external_price?: number | null
+          external_stock?: number | null
+          last_days_sent?: number | null
+          id?: string
+          last_price_sent?: number | null
+          last_stock_sent?: number | null
+          last_synced_at?: string | null
+          organization_id: string
+          shop_id: string
+          status?: string
+          sync_error?: string | null
+          title?: string | null
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          external_item_id?: string
+          external_model_id?: string
+          external_sku?: string | null
+          external_price?: number | null
+          external_stock?: number | null
+          last_days_sent?: number | null
+          id?: string
+          last_price_sent?: number | null
+          last_stock_sent?: number | null
+          last_synced_at?: string | null
+          organization_id?: string
+          shop_id?: string
+          status?: string
+          sync_error?: string | null
+          title?: string | null
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "variant_availability"
+            referencedColumns: ["variant_id"]
+          },
+        ]
+      }
+      label_templates: {
+        Row: {
+          background_path: string | null
+          created_at: string
+          created_by: string | null
+          elements: Json
+          height_mm: number
+          id: string
+          is_default: boolean
+          kind: string
+          name: string
+          organization_id: string
+          updated_at: string
+          width_mm: number
+        }
+        Insert: {
+          background_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          elements?: Json
+          height_mm: number
+          id?: string
+          is_default?: boolean
+          kind: string
+          name: string
+          organization_id: string
+          updated_at?: string
+          width_mm: number
+        }
+        Update: {
+          background_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          elements?: Json
+          height_mm?: number
+          id?: string
+          is_default?: boolean
+          kind?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+          width_mm?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "label_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_categories: {
+        Row: {
+          category_id: number
+          has_children: boolean
+          marketplace: Database["public"]["Enums"]["marketplace"]
+          name: string
+          parent_id: number | null
+          path: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: number
+          has_children?: boolean
+          marketplace: Database["public"]["Enums"]["marketplace"]
+          name: string
+          parent_id?: number | null
+          path: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: number
+          has_children?: boolean
+          marketplace?: Database["public"]["Enums"]["marketplace"]
+          name?: string
+          parent_id?: number | null
+          path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_publications: {
+        Row: {
+          attributes: Json
+          category_id: number | null
+          category_path: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          error: string | null
+          external_item_id: string | null
+          id: string
+          item_status: string
+          logistics: Json
+          organization_id: string
+          product_id: string
+          published_at: string | null
+          shop_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attributes?: Json
+          category_id?: number | null
+          category_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          error?: string | null
+          external_item_id?: string | null
+          id?: string
+          item_status?: string
+          logistics?: Json
+          organization_id: string
+          product_id: string
+          published_at?: string | null
+          shop_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attributes?: Json
+          category_id?: number | null
+          category_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          error?: string | null
+          external_item_id?: string | null
+          id?: string
+          item_status?: string
+          logistics?: Json
+          organization_id?: string
+          product_id?: string
+          published_at?: string | null
+          shop_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_publications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_publications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_publications_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_shops: {
+        Row: {
+          access_expires_at: string | null
+          access_token_secret_id: string | null
+          chat_message_enabled: boolean
+          chat_template: string | null
+          created_at: string
+          created_by: string | null
+          external_shop_id: string
+          id: string
+          last_error: string | null
+          last_sync_at: string | null
+          marketplace: Database["public"]["Enums"]["marketplace"]
+          name: string | null
+          organization_id: string
+          refresh_expires_at: string | null
+          refresh_token_secret_id: string | null
+          region: string | null
+          status: string
+          stock_ratio: number
+          orders_synced_until: string | null
+          price_sync_enabled: boolean
+          ship_mode: string
+          updated_at: string
+        }
+        Insert: {
+          access_expires_at?: string | null
+          access_token_secret_id?: string | null
+          chat_message_enabled?: boolean
+          chat_template?: string | null
+          created_at?: string
+          created_by?: string | null
+          external_shop_id: string
+          id?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          marketplace: Database["public"]["Enums"]["marketplace"]
+          name?: string | null
+          organization_id: string
+          refresh_expires_at?: string | null
+          refresh_token_secret_id?: string | null
+          region?: string | null
+          status?: string
+          stock_ratio?: number
+          orders_synced_until?: string | null
+          price_sync_enabled?: boolean
+          ship_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          access_expires_at?: string | null
+          access_token_secret_id?: string | null
+          chat_message_enabled?: boolean
+          chat_template?: string | null
+          created_at?: string
+          created_by?: string | null
+          external_shop_id?: string
+          id?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          marketplace?: Database["public"]["Enums"]["marketplace"]
+          name?: string | null
+          organization_id?: string
+          refresh_expires_at?: string | null
+          refresh_token_secret_id?: string | null
+          region?: string | null
+          status?: string
+          stock_ratio?: number
+          orders_synced_until?: string | null
+          price_sync_enabled?: boolean
+          ship_mode?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_shops_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tv_pairings: {
+        Row: {
+          code: string
+          created_at: string
+          device_id: string | null
+          expires_at: string
+          id: string
+          linked_at: string | null
+          organization_id: string | null
+          secret_hash: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          device_id?: string | null
+          expires_at?: string
+          id?: string
+          linked_at?: string | null
+          organization_id?: string | null
+          secret_hash: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          device_id?: string | null
+          expires_at?: string
+          id?: string
+          linked_at?: string | null
+          organization_id?: string | null
+          secret_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tv_pairings_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "tv_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tv_pairings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tv_devices: {
         Row: {
           created_at: string
           created_by: string | null
           id: string
           last_seen_at: string | null
+          cast_screen: string | null;
+          cast_at: string | null;
+          cast_by: string | null;
           name: string
           organization_id: string
           revoked_at: string | null
@@ -24,6 +538,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           last_seen_at?: string | null
+          cast_screen?: string | null;
+          cast_at?: string | null;
+          cast_by?: string | null;
           name: string
           organization_id: string
           revoked_at?: string | null
@@ -35,6 +552,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           last_seen_at?: string | null
+          cast_screen?: string | null;
+          cast_at?: string | null;
+          cast_by?: string | null;
           name?: string
           organization_id?: string
           revoked_at?: string | null
@@ -298,6 +818,14 @@ export type Database = {
       };
       orders: {
         Row: {
+          package_number: string | null;
+          channel_fee: number | null;
+          shipment_arranged_at: string | null;
+          external_buyer_id: string | null;
+          chat_sent_at: string | null;
+          ship_by_at: string | null;
+          external_status: string | null;
+          shop_id: string | null;
           confirmed_at: string | null;
           id: string;
           organization_id: string;
@@ -327,6 +855,14 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          package_number?: string | null;
+          channel_fee?: number | null;
+          shipment_arranged_at?: string | null;
+          external_buyer_id?: string | null;
+          chat_sent_at?: string | null;
+          ship_by_at?: string | null;
+          external_status?: string | null;
+          shop_id?: string | null;
           confirmed_at?: string | null;
           id?: string;
           organization_id: string;
@@ -356,6 +892,14 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          package_number?: string | null;
+          channel_fee?: number | null;
+          shipment_arranged_at?: string | null;
+          external_buyer_id?: string | null;
+          chat_sent_at?: string | null;
+          ship_by_at?: string | null;
+          external_status?: string | null;
+          shop_id?: string | null;
           confirmed_at?: string | null;
           id?: string;
           organization_id?: string;
@@ -385,6 +929,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "orders_shop_id_fkey";
+            columns: ["shop_id"];
+            isOneToOne: false;
+            referencedRelation: "marketplace_shops";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "orders_organization_id_fkey";
             columns: ["organization_id"];
@@ -1468,6 +2019,14 @@ export type Database = {
           name: string;
           legal_name: string | null;
           document: string | null;
+          phone: string | null;
+          cep: string | null;
+          street: string | null;
+          number: string | null;
+          complement: string | null;
+          district: string | null;
+          city: string | null;
+          state: string | null;
           active: boolean;
           created_at: string;
           updated_at: string;
@@ -1478,6 +2037,14 @@ export type Database = {
           name: string;
           legal_name?: string | null;
           document?: string | null;
+          phone?: string | null;
+          cep?: string | null;
+          street?: string | null;
+          number?: string | null;
+          complement?: string | null;
+          district?: string | null;
+          city?: string | null;
+          state?: string | null;
           active?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -1488,6 +2055,14 @@ export type Database = {
           name?: string;
           legal_name?: string | null;
           document?: string | null;
+          phone?: string | null;
+          cep?: string | null;
+          street?: string | null;
+          number?: string | null;
+          complement?: string | null;
+          district?: string | null;
+          city?: string | null;
+          state?: string | null;
           active?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -1707,6 +2282,72 @@ export type Database = {
       };
     };
     Functions: {
+      marketplace_save_tokens: {
+        Args: { p_shop: string; p_access: string; p_refresh: string; p_access_expires: string; p_refresh_expires: string }
+        Returns: undefined
+      }
+      marketplace_get_tokens: {
+        Args: { p_shop: string }
+        Returns: { access_token: string | null; refresh_token: string | null; access_expires_at: string | null; refresh_expires_at: string | null }[]
+      }
+      marketplace_forget_tokens: {
+        Args: { p_shop: string }
+        Returns: undefined
+      }
+      marketplace_enqueue: {
+        Args: { p_shop: string; p_kind: string; p_payload?: Json; p_dedupe?: string | null; p_run_after?: string }
+        Returns: number | null
+      }
+      marketplace_claim_jobs: {
+        Args: { p_limit?: number }
+        Returns: Database["public"]["Tables"]["marketplace_jobs"]["Row"][]
+      }
+      marketplace_upsert_order: {
+        Args: { p_shop: string; p_order: Json }
+        Returns: string | null
+      }
+      marketplace_upsert_listings: {
+        Args: { p_shop: string; p_items: Json; p_complete?: boolean }
+        Returns: number
+      }
+      marketplace_listing_targets: {
+        Args: { p_shop: string }
+        Returns: {
+          listing_id: string
+          external_item_id: string
+          external_model_id: string
+          stock: number | null
+          price: number
+          production_days: number
+          last_stock_sent: number | null
+          last_price_sent: number | null
+          last_days_sent: number | null
+          skip_reason: string | null
+        }[]
+      }
+      marketplace_publication_payload: {
+        Args: { p_publication: string }
+        Returns: Json
+      }
+      marketplace_finish_job: {
+        Args: { p_job: number; p_ok: boolean; p_error?: string | null }
+        Returns: undefined
+      }
+      tv_cast: {
+        Args: { p_device: string; p_screen: string | null };
+        Returns: undefined;
+      };
+      tv_cast_targets: {
+        Args: { p_org: string };
+        Returns: {
+          id: string;
+          name: string;
+          last_seen_at: string | null;
+          cast_screen: string | null;
+          revoked: boolean;
+        }[];
+      };
+      tv_command: { Args: { p_token: string }; Returns: Json };
       tv_snapshot: {
         Args: { p_token: string }
         Returns: Json
@@ -1804,6 +2445,7 @@ export type Database = {
       };
     };
     Enums: {
+      marketplace: "shopee";
       order_status:
         | "orcamento"
         | "novo"
@@ -1829,7 +2471,7 @@ export type Database = {
         | "arte_aprovada"
         | "alteracao_pedida"
         | "arte_final";
-      sales_channel: "balcao" | "shopee" | "magalu" | "tiktok" | "whatsapp";
+      sales_channel: "balcao" | "shopee" | "whatsapp";
       person_type: "pf" | "pj";
       fulfillment_mode: "sob_encomenda" | "pronta_entrega";
       stock_movement_type: "entrada" | "saida" | "ajuste" | "perda" | "consumo" | "reserva" | "liberacao";

@@ -4,6 +4,31 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [0.5.0] - 2026-10-15
+
+### Fase 5 — Shopee
+
+#### Adicionado
+
+- **Integrações:** Configurações → Integrações com o botão "Conectar loja da Shopee" (autorização OAuth; tokens no Supabase Vault com renovação automática), situação de cada loja, fila de sincronização com novas tentativas e últimas chamadas.
+- **Pedidos da Shopee** entram sozinhos ao serem pagos (aviso da Shopee + conferência a cada 15 min), sem duplicar, com itens ligados pelo anúncio ou pelo SKU, prazo de postagem, cancelamento e envio vindos da Shopee e a **taxa real** do repasse na conta a receber.
+
+- **Anúncios e estoque:** importação dos anúncios com vínculo pelo SKU, envio de estoque com margem de segurança por loja, preço do canal Shopee (ligado por loja) e prazo de postagem (pré-encomenda acima de 3 dias).
+- **Publicar na Shopee** a partir do cadastro: categoria, atributos, formas de envio, fotos e variações, com conferência do que falta antes de publicar.
+- **Expedição:** organizar o envio da Shopee em lote (agência ou coleta), etiquetas de envio da Shopee em um PDF só e rastreio do pedido.
+- **QR Code de identificação** em cada pedido (e em lote na Expedição): etiqueta 10×15 cm ou folha A4 com número, cliente, prazo e itens; o QR abre o pedido no GraphicX. Também dá para **copiar o QR Code** (imagem), copiar o link ou baixar.
+- **Etiqueta de envio em cada pedido:** Shopee usa a etiqueta oficial (organiza o envio na hora, se preciso); balcão e WhatsApp usam a etiqueta do GraphicX com destinatário, remetente (endereço da gráfica, novo em Dados da gráfica) e QR.
+- **Reproduzir na TV** (ícone de transmitir no topo, como o do YouTube): escolhe uma TV conectada e manda a tela que está aberta (produção, prazos, artes, faturamento ou estoque), com "Parar" para voltar a girar; inclui "Vincular com código de TV". Qualquer pessoa da gráfica pode reproduzir; vincular é de quem gerencia as configurações.
+- **TV: conectar com código (como no YouTube):** a TV abre `/tv` e mostra um código e um QR; quem está logado digita o código (ou lê o QR) em Configurações → Dispositivos de TV e a TV entra no painel sozinha, lembrando o aparelho. Botão **Transmitir** (Chromecast/Google Cast pelo Chrome), **Ligar** de novo uma TV desligada e **Excluir**. TV desligada ou excluída sai do painel na hora.
+- **Modelos de etiqueta:** botão Excluir também dentro do editor.
+- **Mensagem automática no chat da Shopee** após a compra, com o link para o cliente enviar a arte (ligada por loja em Ajustes, texto editável com {loja}, {pedido} e {link}); se a Shopee não liberar o chat para a conta, a tela de Integrações avisa. O pedido mostra quando o link foi enviado.
+- **Modelos de etiqueta** (Configurações → Modelos de etiqueta): a gráfica usa o modelo do GraphicX, cria o seu do zero ou sobe a arte da própria etiqueta e posiciona por cima textos com campos do pedido, QR Code, logo, caixas e linhas; tamanho livre, um modelo padrão por tipo e escolha do modelo na hora de imprimir. Pedidos lançados à mão no canal Shopee usam a etiqueta da gráfica.
+- **Cadastrar cliente ao criar o pedido**, já com nome, WhatsApp e canal digitados; o cliente fica selecionado no pedido.
+
+#### Removido
+
+- **Magalu e TikTok Shop** saem do produto: a GraphicX integra somente a Shopee. Canais retirados do banco, das telas e dos preços por canal.
+
 ## [0.4.0] - 2026-10-11
 
 ### Fase 4 — Dashboard TV + Financeiro básico

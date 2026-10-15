@@ -1,6 +1,6 @@
 # GraphicX
 
-Plataforma SaaS de gestão para gráficas: pedidos, aprovação de artes, produção (PCP), estoque, financeiro, NF-e, dashboard para TV e integração com marketplaces (Shopee, Magalu, TikTok Shop). Multi-empresa: cada gráfica cliente (ex.: Smart Gráfica) tem seus dados isolados.
+Plataforma SaaS de gestão para gráficas: pedidos, aprovação de artes, produção (PCP), estoque, financeiro, NF-e, dashboard para TV e integração com a Shopee. Multi-empresa: cada gráfica cliente (ex.: Smart Gráfica) tem seus dados isolados.
 
 **Stack:** Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind CSS 4 + shadcn/ui · Supabase · Vercel
 
@@ -168,4 +168,22 @@ Veja [.env.example](.env.example). Segredos nunca entram no repositório: este r
 
 ## Cadastrando uma nova loja/marketplace
 
-Chega na Fase 5 (Shopee), com a camada `MarketplaceAdapter`. Esta seção será preenchida nessa fase.
+A gráfica conecta a própria loja em **Configurações → Integrações → Conectar loja da Shopee** (autorização OAuth na Shopee; a GraphicX nunca vê a senha da loja). Os tokens ficam no **Supabase Vault**, nunca em tabela comum.
+
+Para ativar a integração em um ambiente (uma vez, pela equipe da GraphicX):
+
+1. **Shopee Open Platform:** crie o app (conta de desenvolvedor com CNPJ). Cadastre como _redirect_ `https://<domínio>/api/marketplaces/shopee/callback` e como _push URL_ `https://<domínio>/api/marketplaces/shopee/webhook` (aviso de mudança de status de pedido).
+2. **Vercel → Environment Variables** (nunca no código):
+   - `SHOPEE_PARTNER_ID` e `SHOPEE_PARTNER_KEY`: do app na Shopee;
+   - `SHOPEE_ENV`: `sandbox` ou `producao` (opcional `SHOPEE_API_HOST` para outro host);
+   - `CRON_SECRET`: texto aleatório com 32 caracteres ou mais; protege `/api/marketplaces/worker`.
+3. **Supabase → Vault** (o relógio do banco chama o processador da fila a cada minuto):
+   - `marketplace_worker_url`: `https://<domínio>/api/marketplaces/worker`;
+   - `marketplace_worker_secret`: o mesmo valor do `CRON_SECRET`.
+4. Confira com `npm run env:verificar`.
+
+Sem essas variáveis, a tela mostra que a conexão "será liberada em breve" e nada é chamado.
+
+Mensagem no chat: com a opção ligada na loja, cada pedido novo que precisa de arte recebe pelo chat da Shopee o link para enviar a arte (API Seller Chat; a Shopee precisa liberar o chat para o app).
+
+Como funciona: avisos da Shopee e rotinas (renovação de token a cada 15 min, conferência de pedidos) viram tarefas em `marketplace_jobs`; o processador (`src/lib/marketplaces/worker.ts`) as executa com novas tentativas (espera exponencial, até 6). Cada chamada fica em `marketplace_logs`, visível na tela de Integrações.
