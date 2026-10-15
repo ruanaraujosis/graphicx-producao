@@ -1,6 +1,6 @@
 "use client";
 
-import { FileDown, Loader2, MapPin, PackageCheck } from "lucide-react";
+import { Loader2, MapPin, PackageCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -8,17 +8,15 @@ import { Button } from "@/components/ui/button";
 import type { TrackingEvent } from "@/lib/marketplaces/shopee/logistics";
 import { arrangeShipments, loadTracking } from "../../expedicao/actions";
 
-/** Envio do pedido da Shopee: organizar, etiqueta e rastreio. */
+/** Envio do pedido da Shopee: organizar e rastreio (a etiqueta fica no topo do pedido). */
 export function ShopeeShipping({
   orderId,
   canArrange,
-  hasLabel,
   canManage,
   canTrack,
 }: {
   orderId: string;
   canArrange: boolean;
-  hasLabel: boolean;
   canManage: boolean;
   canTrack: boolean;
 }) {
@@ -58,18 +56,6 @@ export function ShopeeShipping({
           >
             {pending ? <Loader2 className="animate-spin" /> : <PackageCheck />}
             Organizar envio
-          </Button>
-        )}
-        {hasLabel && (
-          <Button asChild variant="outline" size="sm" className="min-h-11 md:min-h-8">
-            <a
-              href={`/api/marketplaces/shopee/etiquetas?pedidos=${orderId}&tipo=termica`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <FileDown />
-              Etiqueta de envio
-            </a>
           </Button>
         )}
         {canTrack && (

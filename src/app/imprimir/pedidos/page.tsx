@@ -6,7 +6,7 @@ import { formatDateTime } from "@/lib/format";
 import { orderQrSvg } from "@/lib/orders/qrcode";
 import { orderNumber } from "@/lib/orders/status";
 import { createClient } from "@/lib/supabase/server";
-import { PrintToolbar } from "./print-toolbar";
+import { PrintToolbar } from "../print-toolbar";
 
 export const metadata = { title: "Etiquetas de identificação" };
 
@@ -56,7 +56,16 @@ async function Etiquetas({
         @page { size: ${format === "a4" ? "A4" : "100mm 150mm"}; margin: ${format === "a4" ? "8mm" : "0"}; }
         @media print { html, body { background: #fff !important; } }
       `}</style>
-      <PrintToolbar ids={ids.join(",")} format={format} count={orders.length} />
+      <PrintToolbar
+        basePath="/imprimir/pedidos"
+        ids={ids.join(",")}
+        format={format}
+        formats={[
+          ["etiqueta", "Etiqueta 10×15 cm"],
+          ["a4", "Folha A4 (8 por folha)"],
+        ]}
+        summary={`${orders.length} ${orders.length === 1 ? "etiqueta" : "etiquetas"} de identificação`}
+      />
       <main
         className={
           format === "a4"

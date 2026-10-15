@@ -1,4 +1,4 @@
-import { FileText, MessageCircle, Pencil, Phone, QrCode } from "lucide-react";
+import { FileText, MessageCircle, Pencil, Phone, Tag } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -21,6 +21,8 @@ import {
   orderNumber,
   type OrderStatus,
 } from "@/lib/orders/status";
+import { orderQrPng, orderUrl } from "@/lib/orders/qrcode";
+import { OrderQrDialog } from "./order-qr-dialog";
 import { ShopeeShipping } from "./shopee-shipping";
 import { SHOPEE_STATUS_LABELS } from "@/lib/marketplaces/shopee/labels";
 import { createClient } from "@/lib/supabase/server";
@@ -145,6 +147,7 @@ async function Pedido({ params }: { params: Params }) {
   const artStage =
     status !== "orcamento" && status !== "cancelado" && isBefore(status, "em_impressao");
   const phone = order.customer_phone ? digits(order.customer_phone) : "";
+  const qrPng = await orderQrPng(order.id);
 
   return (
     <>
@@ -165,12 +168,28 @@ async function Pedido({ params }: { params: Params }) {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild>
-            <a href={`/imprimir/pedidos?ids=${order.id}`} target="_blank" rel="noreferrer">
-              <QrCode />
-              QR Code
-            </a>
-          </Button>
+          <OrderQrDialog
+            orderId={order.id}
+            label={orderNumber(order.number)}
+            png={qrPng}
+            url={orderUrl(order.id)}
+          />
+          {status !== "cancelado" && status !== "orcamento" && (
+            <Button variant="outline" asChild>
+              <a
+                href={
+                  order.channel === "shopee"
+                    ? `/api/marketplaces/shopee/etiquetas?pedidos=${order.id}&tipo=termica`
+                    : `/imprimir/envio?ids=${order.id}`
+                }
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Tag />
+                Etiqueta de envio
+              </a>
+            </Button>
+          )}
           {editable && (
             <Button variant="outline" asChild>
               <Link href={`/pedidos/${order.id}/editar`}>
@@ -479,10 +498,6 @@ async function Pedido({ params }: { params: Params }) {
                   canArrange={
                     !order.shipment_arranged_at &&
                     ["READY_TO_SHIP", "RETRY_SHIP"].includes(order.external_status ?? "")
-                  }
-                  hasLabel={
-                    Boolean(order.shipment_arranged_at) ||
-                    ["PROCESSED", "SHIPPED"].includes(order.external_status ?? "")
                   }
                   canManage={can(perms, "expedicao.gerenciar")}
                   canTrack={Boolean(order.tracking_code)}

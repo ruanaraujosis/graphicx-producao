@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireOrg } from "@/lib/auth/dal";
-import { dbErrorMessage, type ActionResult } from "@/lib/crud";
+import { customerSchema } from "@/app/(app)/cadastros/clientes/schema";
+import { dbErrorMessage, saveOrgRecord, type ActionResult } from "@/lib/crud";
 import { digits } from "@/lib/documents";
 import { ilikeTerm } from "@/lib/list-params";
 import { ORDER_STATUSES, type OrderStatus } from "@/lib/orders/status";
@@ -162,4 +163,24 @@ export async function addOrderComment(input: unknown): Promise<ActionResult> {
   }
   revalidatePath(`/pedidos/${parsed.data.order_id}`);
   return { ok: true, message: "Comentário registrado." };
+}
+
+/** Cadastra o cliente sem sair do pedido (quem cria pedidos pode cadastrar clientes). */
+export async function createCustomerFromOrder(
+  raw: Record<string, unknown>,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = customerSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  return saveOrgRecord({
+    table: "customers",
+    permission: "pedidos.gerenciar",
+    values: parsed.data,
+    revalidate: "/cadastros/clientes",
+    messages: {
+      created: `Cliente ${parsed.data.name} cadastrado e selecionado no pedido.`,
+      updated: "Cliente atualizado.",
+      unique: "Já existe um cliente com esse CPF/CNPJ. Busque pelo nome.",
+      fallback: "Não foi possível cadastrar o cliente.",
+    },
+  });
 }

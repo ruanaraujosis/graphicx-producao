@@ -31,7 +31,8 @@ export type CustomerRow = {
 
 const isPj = (v: Record<string, unknown>) => v.person_type === "pj";
 
-const FIELDS: FieldConfig[] = [
+/** Campos do cadastro de cliente (também usados ao criar o pedido). */
+export const CUSTOMER_FIELDS: FieldConfig[] = [
   {
     name: "person_type",
     label: "Tipo",
@@ -83,7 +84,7 @@ const ACTIVE_FIELD: FieldConfig = {
   hint: "Inativos somem das buscas de pedidos.",
 };
 
-function toForm(c?: CustomerRow) {
+export function customerFormValues(c?: Partial<CustomerRow>) {
   return {
     person_type: c?.person_type ?? "pf",
     origin: c?.origin ?? "balcao",
@@ -123,8 +124,8 @@ export function CustomerFormDialog({ customer }: { customer?: CustomerRow }) {
         )
       }
       schema={customerSchema}
-      defaultValues={toForm(customer)}
-      fields={customer ? [...FIELDS, ACTIVE_FIELD] : FIELDS}
+      defaultValues={customerFormValues(customer)}
+      fields={customer ? [...CUSTOMER_FIELDS, ACTIVE_FIELD] : CUSTOMER_FIELDS}
       action={(values) => saveCustomer(customer?.id ?? null, values)}
       submitLabel={customer ? "Salvar" : "Cadastrar cliente"}
     />

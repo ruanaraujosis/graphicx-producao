@@ -25,6 +25,7 @@ import { formatCurrency } from "@/lib/format";
 import { parseDecimal } from "@/lib/form-schemas";
 import { addBusinessDays, formatDueDate, todayIso } from "@/lib/orders/deadline";
 import { saveOrder, searchCustomers } from "./actions";
+import { NewCustomerButton } from "./new-customer";
 import type { PaymentOption, VariantOption } from "./data";
 import { orderSchema } from "./schema";
 
@@ -255,7 +256,7 @@ export function OrderForm({
               value={customerName}
               minChars={2}
               placeholder="Busque um cliente ou digite o nome"
-              emptyText="Nenhum cliente com esse nome — o pedido usa o nome digitado."
+              emptyText="Nenhum cliente com esse nome — cadastre abaixo ou use só o nome digitado."
               onTextChange={(t) => {
                 setCustomerName(t);
                 setCustomerId(null);
@@ -267,7 +268,20 @@ export function OrderForm({
               }}
               search={searchPeople}
             />
-            {customerId && <p className="text-xs text-success">Cliente cadastrado selecionado.</p>}
+            {customerId ? (
+              <p className="text-xs text-success">Cliente cadastrado selecionado.</p>
+            ) : (
+              <NewCustomerButton
+                name={customerName}
+                phone={customerPhone}
+                channel={channel}
+                onCreated={(c) => {
+                  setCustomerId(c.id);
+                  setCustomerName(c.name);
+                  if (c.phone) setCustomerPhone(formatPhone(c.phone));
+                }}
+              />
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor={`${ids}-phone`}>WhatsApp</Label>

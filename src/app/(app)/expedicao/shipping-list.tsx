@@ -1,6 +1,6 @@
 "use client";
 
-import { FileDown, Loader2, PackageCheck, QrCode } from "lucide-react";
+import { FileDown, Loader2, PackageCheck, QrCode, Tag } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -50,7 +50,9 @@ export function ShippingList({
   const [pending, start] = useTransition();
   const chosen = rows.filter((r) => selected.has(r.id));
   const toArrange = chosen.filter(canArrange);
-  const withLabel = chosen.filter(hasLabel);
+  // Etiqueta da Shopee: já organizados, ou ainda por organizar (a rota organiza na hora para quem pode).
+  const withLabel = chosen.filter((r) => hasLabel(r) || (canManage && canArrange(r)));
+  const ownLabel = chosen.filter((r) => r.channel !== "shopee");
   const ids = (list: ShippingRow[]) => list.map((r) => r.id).join(",");
 
   const toggle = (id: string, on: boolean) =>
@@ -118,6 +120,22 @@ export function ShippingList({
           >
             <FileDown />
             Etiquetas Shopee{withLabel.length ? ` (${withLabel.length})` : ""}
+          </a>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          className="min-h-11 md:min-h-9"
+          aria-disabled={!ownLabel.length}
+        >
+          <a
+            href={ownLabel.length ? `/imprimir/envio?ids=${ids(ownLabel)}` : undefined}
+            target="_blank"
+            rel="noreferrer"
+            className={ownLabel.length ? "" : "pointer-events-none opacity-50"}
+          >
+            <Tag />
+            Etiquetas de envio{ownLabel.length ? ` (${ownLabel.length})` : ""}
           </a>
         </Button>
         <Button

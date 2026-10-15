@@ -19,3 +19,13 @@ export function orderQrSvg(orderId: string) {
     color: { dark: "#000000", light: "#ffffff" },
   });
 }
+
+/** QR Code do pedido em PNG (data URL), para copiar ou baixar como imagem. */
+export function orderQrPng(orderId: string) {
+  return QRCode.toDataURL(orderUrl(orderId), {
+    errorCorrectionLevel: "M",
+    margin: 2,
+    width: 512,
+    color: { dark: "#000000", light: "#ffffff" },
+  });
+}

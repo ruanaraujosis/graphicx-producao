@@ -14,7 +14,9 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 - **Anúncios e estoque:** importação dos anúncios com vínculo pelo SKU, envio de estoque com margem de segurança por loja, preço do canal Shopee (ligado por loja) e prazo de postagem (pré-encomenda acima de 3 dias).
 - **Publicar na Shopee** a partir do cadastro: categoria, atributos, formas de envio, fotos e variações, com conferência do que falta antes de publicar.
 - **Expedição:** organizar o envio da Shopee em lote (agência ou coleta), etiquetas de envio da Shopee em um PDF só e rastreio do pedido.
-- **QR Code de identificação** em cada pedido (e em lote na Expedição): etiqueta 10×15 cm ou folha A4 com número, cliente, prazo e itens; o QR abre o pedido no GraphicX.
+- **QR Code de identificação** em cada pedido (e em lote na Expedição): etiqueta 10×15 cm ou folha A4 com número, cliente, prazo e itens; o QR abre o pedido no GraphicX. Também dá para **copiar o QR Code** (imagem), copiar o link ou baixar.
+- **Etiqueta de envio em cada pedido:** Shopee usa a etiqueta oficial (organiza o envio na hora, se preciso); balcão e WhatsApp usam a etiqueta do GraphicX com destinatário, remetente (endereço da gráfica, novo em Dados da gráfica) e QR.
+- **Cadastrar cliente ao criar o pedido**, já com nome, WhatsApp e canal digitados; o cliente fica selecionado no pedido.
 
 #### Removido
 

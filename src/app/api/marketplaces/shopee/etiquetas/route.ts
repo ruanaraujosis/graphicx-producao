@@ -1,9 +1,16 @@
 import { PDFDocument } from "pdf-lib";
 import type { NextRequest } from "next/server";
 import { requireOrg } from "@/lib/auth/dal";
+import { can } from "@/lib/auth/permissions";
 import { getShopeeConfig } from "@/lib/marketplaces/shopee/config";
-import { type DocumentType, fetchShippingLabels } from "@/lib/marketplaces/shopee/logistics";
-import { loadShop, logger, shopCredentials } from "@/lib/marketplaces/store";
+import {
+  arrangeShipment,
+  type DocumentType,
+  fetchShippingLabels,
+  getTrackingNumber,
+  type ShipMode,
+} from "@/lib/marketplaces/shopee/logistics";
+import { admin, loadShop, logger, shopCredentials } from "@/lib/marketplaces/store";
 import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 60;
@@ -19,7 +26,8 @@ function problem(message: string, status = 409) {
 
 /**
  * Etiquetas de envio da Shopee em um PDF só (?pedidos=id1,id2&tipo=termica|a4).
- * Só pedidos com o envio já organizado. Até 50 por vez.
+ * Pedido com o envio ainda não organizado: quem tem expedicao.gerenciar
+ * organiza na hora (agência ou coleta, conforme a loja). Até 50 por vez.
  */
 export async function GET(request: NextRequest) {
   const { membership } = await requireOrg("expedicao.ver");
@@ -46,15 +54,21 @@ export async function GET(request: NextRequest) {
     .eq("organization_id", membership.organizationId)
     .eq("channel", "shopee")
     .in("id", ids);
+  const canArrange = can(membership.permissions, "expedicao.gerenciar");
+  const arranged = (o: { shipment_arranged_at: string | null; external_status: string | null }) =>
+    Boolean(o.shipment_arranged_at) || ["PROCESSED", "SHIPPED"].includes(o.external_status ?? "");
+  const pendingArrange = (o: {
+    shipment_arranged_at: string | null;
+    external_status: string | null;
+  }) => !arranged(o) && ["READY_TO_SHIP", "RETRY_SHIP"].includes(o.external_status ?? "");
   const orders = (data ?? []).filter(
-    (o) =>
-      o.shop_id &&
-      o.external_id &&
-      (o.shipment_arranged_at || ["PROCESSED", "SHIPPED"].includes(o.external_status ?? "")),
+    (o) => o.shop_id && o.external_id && (arranged(o) || (canArrange && pendingArrange(o))),
   );
   if (!orders.length)
     return problem(
-      "Nenhum dos pedidos está com o envio organizado na Shopee. Organize o envio antes.",
+      canArrange
+        ? "Nenhum dos pedidos está pronto para envio na Shopee."
+        : "Nenhum dos pedidos está com o envio organizado na Shopee. Peça a quem cuida da expedição para organizar o envio.",
     );
 
   const merged = await PDFDocument.create();
@@ -67,16 +81,42 @@ export async function GET(request: NextRequest) {
       continue;
     }
     try {
+      const creds = await shopCredentials(shop);
+      const onLog = logger(shop);
+      // Organiza na hora o envio dos que ainda não foram organizados.
+      for (const o of list.filter(pendingArrange)) {
+        const ref = { order_sn: o.external_id!, package_number: o.package_number };
+        try {
+          await arrangeShipment(config, creds, ref, shop.ship_mode as ShipMode, { onLog });
+          const tracking = await getTrackingNumber(config, creds, ref, { onLog }).catch(() => null);
+          o.tracking_code = tracking ?? o.tracking_code;
+          o.shipment_arranged_at = new Date().toISOString();
+          await admin()
+            .from("orders")
+            .update({
+              shipment_arranged_at: o.shipment_arranged_at,
+              external_status: "PROCESSED",
+              ...(tracking ? { tracking_code: tracking.slice(0, 60) } : {}),
+            })
+            .eq("id", o.id);
+        } catch (e) {
+          failures.push(
+            `#${o.number}: ${e instanceof Error ? e.message : "não foi possível organizar o envio"}`,
+          );
+        }
+      }
+      const ready = list.filter((o) => o.shipment_arranged_at || arranged(o));
+      if (!ready.length) continue;
       const { pdf, failed } = await fetchShippingLabels(
         config,
-        await shopCredentials(shop),
-        list.map((o) => ({
+        creds,
+        ready.map((o) => ({
           order_sn: o.external_id!,
           package_number: o.package_number,
           tracking_number: o.tracking_code,
         })),
         type,
-        { onLog: logger(shop) },
+        { onLog },
       );
       for (const [sn, reason] of failed) {
         const o = list.find((x) => x.external_id === sn);
