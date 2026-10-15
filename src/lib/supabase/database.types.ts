@@ -524,6 +524,9 @@ export type Database = {
           created_by: string | null
           id: string
           last_seen_at: string | null
+          cast_screen: string | null;
+          cast_at: string | null;
+          cast_by: string | null;
           name: string
           organization_id: string
           revoked_at: string | null
@@ -535,6 +538,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           last_seen_at?: string | null
+          cast_screen?: string | null;
+          cast_at?: string | null;
+          cast_by?: string | null;
           name: string
           organization_id: string
           revoked_at?: string | null
@@ -546,6 +552,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           last_seen_at?: string | null
+          cast_screen?: string | null;
+          cast_at?: string | null;
+          cast_by?: string | null;
           name?: string
           organization_id?: string
           revoked_at?: string | null
@@ -2324,6 +2333,21 @@ export type Database = {
         Args: { p_job: number; p_ok: boolean; p_error?: string | null }
         Returns: undefined
       }
+      tv_cast: {
+        Args: { p_device: string; p_screen: string | null };
+        Returns: undefined;
+      };
+      tv_cast_targets: {
+        Args: { p_org: string };
+        Returns: {
+          id: string;
+          name: string;
+          last_seen_at: string | null;
+          cast_screen: string | null;
+          revoked: boolean;
+        }[];
+      };
+      tv_command: { Args: { p_token: string }; Returns: Json };
       tv_snapshot: {
         Args: { p_token: string }
         Returns: Json

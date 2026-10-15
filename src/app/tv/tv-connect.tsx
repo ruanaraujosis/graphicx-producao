@@ -97,8 +97,8 @@ export function TvConnect({ forceNew }: { forceNew: boolean }) {
               {pairing.code.slice(0, 3)} {pairing.code.slice(3)}
             </p>
             <p className="max-w-xl text-lg text-muted-foreground">
-              No GraphicX, abra <strong>Configurações → Dispositivos de TV → Conectar TV</strong> e
-              digite o código.
+              No GraphicX, toque no ícone <strong>Reproduzir na TV</strong> (no topo da tela) e use{" "}
+              <strong>Vincular com código de TV</strong>.
             </p>
           </div>
           {qr && (

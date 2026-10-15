@@ -3,8 +3,10 @@ import { Suspense } from "react";
 import { Logo } from "@/components/brand/logo";
 import { BottomNav } from "@/components/shell/bottom-nav";
 import { SidebarNav, SidebarNavSkeleton } from "@/components/shell/sidebar-nav";
+import { CastToTv } from "@/components/shell/cast-to-tv";
 import { UserMenu } from "@/components/shell/user-menu";
 import { getShellContext } from "@/lib/auth/dal";
+import { can } from "@/lib/auth/permissions";
 
 /**
  * Layout das áreas logadas. A moldura (header, sidebar) é estática e entra no
@@ -73,14 +75,19 @@ async function OrganizationBadge() {
 async function HeaderUser() {
   const { session, membership } = await getShellContext();
   return (
-    <UserMenu
-      fullName={session.fullName}
-      username={session.username}
-      subtitle={membership ? membership.roleName : session.isPlatformAdmin ? "SuperAdmin" : ""}
-      organizationName={membership?.name}
-      canSwitchOrganization={session.memberships.length > 1}
-      isPlatformAdmin={session.isPlatformAdmin}
-    />
+    <div className="flex items-center gap-1">
+      {membership && (
+        <CastToTv canConnect={can(membership.permissions, "configuracoes.gerenciar")} />
+      )}
+      <UserMenu
+        fullName={session.fullName}
+        username={session.username}
+        subtitle={membership ? membership.roleName : session.isPlatformAdmin ? "SuperAdmin" : ""}
+        organizationName={membership?.name}
+        canSwitchOrganization={session.memberships.length > 1}
+        isPlatformAdmin={session.isPlatformAdmin}
+      />
+    </div>
   );
 }
 
