@@ -4,6 +4,8 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [0.5.0] - 2026-10-15
+
 ### Fase 5 — Shopee
 
 #### Adicionado
