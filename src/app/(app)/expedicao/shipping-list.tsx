@@ -52,7 +52,8 @@ export function ShippingList({
   const toArrange = chosen.filter(canArrange);
   // Etiqueta da Shopee: já organizados, ou ainda por organizar (a rota organiza na hora para quem pode).
   const withLabel = chosen.filter((r) => hasLabel(r) || (canManage && canArrange(r)));
-  const ownLabel = chosen.filter((r) => r.channel !== "shopee");
+  // Pedido que não veio da Shopee (balcão, WhatsApp ou lançado à mão): modelo da gráfica.
+  const ownLabel = chosen.filter((r) => !r.external_status);
   const ids = (list: ShippingRow[]) => list.map((r) => r.id).join(",");
 
   const toggle = (id: string, on: boolean) =>

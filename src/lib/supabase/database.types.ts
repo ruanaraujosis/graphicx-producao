@@ -219,6 +219,59 @@ export type Database = {
           },
         ]
       }
+      label_templates: {
+        Row: {
+          background_path: string | null
+          created_at: string
+          created_by: string | null
+          elements: Json
+          height_mm: number
+          id: string
+          is_default: boolean
+          kind: string
+          name: string
+          organization_id: string
+          updated_at: string
+          width_mm: number
+        }
+        Insert: {
+          background_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          elements?: Json
+          height_mm: number
+          id?: string
+          is_default?: boolean
+          kind: string
+          name: string
+          organization_id: string
+          updated_at?: string
+          width_mm: number
+        }
+        Update: {
+          background_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          elements?: Json
+          height_mm?: number
+          id?: string
+          is_default?: boolean
+          kind?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+          width_mm?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "label_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_categories: {
         Row: {
           category_id: number

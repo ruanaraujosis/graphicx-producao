@@ -1,4 +1,4 @@
-import { Building2, ChevronRight, PlugZap, ShieldCheck, Tv, Users } from "lucide-react";
+import { Building2, ChevronRight, PlugZap, ShieldCheck, Tag, Tv, Users } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/kit/page-header";
@@ -20,7 +20,7 @@ const SECTIONS: {
   {
     href: "/configuracoes/empresa",
     title: "Dados da gráfica",
-    description: "Nome, razão social e CNPJ da gráfica.",
+    description: "Nome, razão social, CNPJ e endereço (remetente das etiquetas).",
     icon: Building2,
     tone: "teal",
     permission: "configuracoes.ver",
@@ -40,6 +40,15 @@ const SECTIONS: {
     icon: ShieldCheck,
     tone: "info",
     permission: "equipe.ver",
+  },
+  {
+    href: "/configuracoes/etiquetas",
+    title: "Modelos de etiqueta",
+    description:
+      "Etiquetas de envio e de identificação: use o modelo do GraphicX, crie o seu ou suba a sua arte.",
+    icon: Tag,
+    tone: "primary",
+    permission: "configuracoes.ver",
   },
   {
     href: "/configuracoes/integracoes",

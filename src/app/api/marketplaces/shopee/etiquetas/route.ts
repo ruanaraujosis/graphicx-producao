@@ -17,11 +17,14 @@ export const maxDuration = 60;
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
+/** Página simples com o motivo (a rota abre numa aba nova). */
 function problem(message: string, status = 409) {
-  return new Response(message, {
-    status,
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-  });
+  const escape = (t: string) =>
+    t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+  const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Etiqueta da Shopee</title>
+<style>body{font-family:system-ui,sans-serif;max-width:560px;margin:48px auto;padding:0 16px;line-height:1.5;color:#111;background:#fff}h1{font-size:20px}p{white-space:pre-line}button{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #ccc;background:#fff;font:inherit;cursor:pointer}@media (prefers-color-scheme:dark){body{background:#111;color:#eee}button{background:#222;color:#eee;border-color:#444}}</style></head>
+<body><h1>Não foi possível gerar a etiqueta</h1><p>${escape(message)}</p><button onclick="window.close()">Fechar</button></body></html>`;
+  return new Response(html, { status, headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
 /**

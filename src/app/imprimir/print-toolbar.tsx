@@ -13,6 +13,8 @@ export function PrintToolbar({
   formats,
   summary,
   warnings = [],
+  templates = [],
+  templateId = null,
 }: {
   basePath: string;
   ids: string;
@@ -20,8 +22,12 @@ export function PrintToolbar({
   formats: readonly (readonly [value: string, label: string])[];
   summary: string;
   warnings?: string[];
+  /** Modelos disponíveis ("graphicx" = modelo embutido). */
+  templates?: { id: string; name: string }[];
+  templateId?: string | null;
 }) {
-  const href = (f: string) => `${basePath}?ids=${ids}&formato=${f}`;
+  const href = (f: string, modelo = templateId) =>
+    `${basePath}?ids=${ids}&formato=${f}${modelo ? `&modelo=${modelo}` : ""}`;
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-2 border-b bg-background px-4 py-3 print:hidden">
       <div className="flex flex-wrap items-center gap-2">
@@ -43,6 +49,24 @@ export function PrintToolbar({
             </Link>
           ))}
         </nav>
+        {templates.length > 1 && (
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Modelo</span>
+            <select
+              className="min-h-11 rounded-full border bg-card px-3 text-sm md:min-h-9"
+              value={templateId ?? "graphicx"}
+              onChange={(e) => {
+                window.location.href = href(format, e.target.value);
+              }}
+            >
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <Button className="min-h-11 md:min-h-9" onClick={() => window.print()}>
           <Printer />
           Imprimir

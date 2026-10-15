@@ -65,7 +65,7 @@ async function Pedido({ params }: { params: Params }) {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, external_status, ship_by_at, package_number, channel_fee, shipment_arranged_at, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
+      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, shop_id, external_status, ship_by_at, package_number, channel_fee, shipment_arranged_at, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
     )
     .eq("id", id)
     .eq("organization_id", membership.organizationId)
@@ -178,7 +178,8 @@ async function Pedido({ params }: { params: Params }) {
             <Button variant="outline" asChild>
               <a
                 href={
-                  order.channel === "shopee"
+                  // Etiqueta oficial só para pedido que veio da Shopee; os outros usam o modelo da gráfica.
+                  order.external_id && order.shop_id
                     ? `/api/marketplaces/shopee/etiquetas?pedidos=${order.id}&tipo=termica`
                     : `/imprimir/envio?ids=${order.id}`
                 }
