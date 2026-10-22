@@ -23,3 +23,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Banco só muda por migration em `supabase/migrations/` (`npm run db:new <nome>`). Tabelas críticas recebem o trigger `private.audit_row_change()`.
 - Commits em Conventional Commits, em português. Branches `feat/*`, `fix/*`, `chore/*` saem de `develop`.
 - Antes de abrir PR: `npm run format && npm run lint && npm run typecheck && npm test && npm run build`.
+
+## Onde está cada coisa (para não varrer o repositório)
+
+- Estado: fases 1 a 5 entregues (ver o topo do `CHANGELOG.md`); próximas são NF-e (6), marketing Shopee (7), Magalu/TikTok (8).
+- `PROMPT.md` é a especificação original: abra **só a seção** da tarefa (Grep pelo `##`). Onde ela diverge do código, o código e este arquivo valem (ex.: a paleta roxa do `PROMPT.md` foi substituída pela da graphicX).
+- Telas: `src/app/(app)/<modulo>/`; link público de arte: `src/app/a/[token]/`; TV: `src/app/tv/[token]/`.
+- Regras de negócio: `src/lib/<dominio>/` (`stock`, `orders`, `art`, `finance`, `labels`, `tv`, `auth`). Marketplaces: núcleo em `src/lib/marketplaces/`, Shopee em `src/lib/marketplaces/shopee/`.
+- Componentes: `src/components/ui/` (shadcn), `src/components/kit/` (padrões do projeto), `src/components/shell/` (layout).
+- Banco: `supabase/migrations/`, testes de RLS em `supabase/tests/database/`, tipos gerados em `src/lib/supabase/database.types.ts` (arquivo grande: use Grep, não leia inteiro; regenere com `npm run db:types`).
+- Como rodar, ambientes e Vercel: seções do `README.md` (`Rodando localmente`, `Ambientes`, `Configuração da Vercel`).
