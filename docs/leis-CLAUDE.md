@@ -1,10 +1,11 @@
-<!-- Cópia de referência do CLAUDE.md usado no clone de https://github.com/ctresb/leis (acervo de legislação, alheio ao sistema da gráfica). Para usar: copie para a raiz do clone como CLAUDE.md. -->
+<!-- Cópia de referência do CLAUDE.md do fork https://github.com/ruanaraujosis/leis (acervo de legislação, alheio ao sistema da gráfica). A versão oficial fica no fork. -->
 
 # leis — acervo da legislação brasileira em Markdown
 
-Clone de `https://github.com/ctresb/leis` (terceiros, licença MIT para scripts; textos de lei são
-atos oficiais). Repositório **gigante**: ~1,2 milhão de arquivos, ~13 GB no disco, 324 mil commits
-no histórico remoto (o clone é raso, `--depth 1`). Texto informativo — **não substitui o Diário Oficial**.
+Fork `ruanaraujosis/leis` do original `ctresb/leis` (licença MIT para scripts; textos de lei são
+atos oficiais). Para atualizar com o original: **Sync fork** no GitHub.
+Repositório **gigante**: ~1,2 milhão de arquivos, ~13 GB no disco, 324 mil commits no histórico
+remoto (clone sempre raso, `--depth 1`). Texto informativo — **não substitui o Diário Oficial**.
 
 ## Economia de contexto (obrigatório)
 
@@ -36,13 +37,13 @@ Cada `.md` tem cabeçalho YAML (sempre: `titulo`, `tipo`, `numero`, `data`, `ver
 `fonte`, `baixado_em`; quando houver: `uf`, `ementa`, `situacao`, `revogada`, `urn`…) e depois
 `# Título` + texto. Lacunas conhecidas: RJ sem dados, MG parado, CE/MA só leis, municipais parciais.
 
-## Ambiente (nesta sessão)
+## Ambiente
 
 - Python: `.venv/bin/python -I scripts/<nome>.py` (venv com `pypdf`, `pdfplumber`,
   `markdown-it-py`, `Pillow`; o resto é biblioteca padrão). Sempre com `-I`, como o projeto exige.
 - OCR: Tesseract 5 + `scripts/bin/tessdata/por.traineddata` (SHA-256 conferido com o README).
-  `scripts/ocr.swift` (Vision) e `textutil` são só macOS — não funcionam aqui.
-- `pdftotext` (poppler) instalado no sistema.
+  `scripts/ocr.swift` (Vision) e `textutil` são só macOS — não funcionam no Linux.
+- `pdftotext` (poppler) no sistema.
 - Testes: `.venv/bin/python -I -m unittest discover -s scripts -p 'test_*.py'`
   (252 testes; 1 erro esperado sem o cache `_fonte/`, que não é versionado).
 - `_fonte/`, `_indice/` e logs não vêm no clone (27 GB); os baixadores os recriam e são retomáveis.
@@ -52,8 +53,8 @@ Cada `.md` tem cabeçalho YAML (sempre: `titulo`, `tipo`, `numero`, `data`, `ver
 ## Recriar o ambiente numa sessão nova
 
 ```sh
-GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://github.com/ctresb/leis /home/user/ctresb/leis
-cd /home/user/ctresb/leis
+GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://github.com/ruanaraujosis/leis /home/user/leis
+cd /home/user/leis
 uv venv -p 3.13 .venv && uv pip install -p .venv/bin/python pypdf pdfplumber markdown-it-py pillow
 apt-get install -y tesseract-ocr
 mkdir -p scripts/bin/tessdata && curl -sSL -o scripts/bin/tessdata/por.traineddata \
