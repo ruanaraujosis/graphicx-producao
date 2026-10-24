@@ -272,6 +272,63 @@ export type Database = {
           },
         ]
       }
+      marketplace_boost_items: {
+        Row: {
+          active: boolean
+          created_at: string
+          external_item_id: string
+          id: string
+          last_boosted_at: string | null
+          last_error: string | null
+          organization_id: string
+          position: number
+          shop_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          external_item_id: string
+          id?: string
+          last_boosted_at?: string | null
+          last_error?: string | null
+          organization_id: string
+          position?: number
+          shop_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          external_item_id?: string
+          id?: string
+          last_boosted_at?: string | null
+          last_error?: string | null
+          organization_id?: string
+          position?: number
+          shop_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_boost_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_boost_items_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_categories: {
         Row: {
           category_id: number
@@ -387,6 +444,125 @@ export type Database = {
           },
         ]
       }
+      marketplace_reply_templates: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          id: string
+          max_stars: number
+          min_stars: number
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          id?: string
+          max_stars: number
+          min_stars: number
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          id?: string
+          max_stars?: number
+          min_stars?: number
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_reply_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_reviews: {
+        Row: {
+          auto: boolean
+          buyer_name: string | null
+          comment: string | null
+          commented_at: string | null
+          created_at: string
+          error: string | null
+          external_comment_id: string
+          external_item_id: string | null
+          id: string
+          item_title: string | null
+          organization_id: string
+          rating: number
+          replied_at: string | null
+          replied_by: string | null
+          reply_text: string | null
+          shop_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auto?: boolean
+          buyer_name?: string | null
+          comment?: string | null
+          commented_at?: string | null
+          created_at?: string
+          error?: string | null
+          external_comment_id: string
+          external_item_id?: string | null
+          id?: string
+          item_title?: string | null
+          organization_id: string
+          rating: number
+          replied_at?: string | null
+          replied_by?: string | null
+          reply_text?: string | null
+          shop_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auto?: boolean
+          buyer_name?: string | null
+          comment?: string | null
+          commented_at?: string | null
+          created_at?: string
+          error?: string | null
+          external_comment_id?: string
+          external_item_id?: string | null
+          id?: string
+          item_title?: string | null
+          organization_id?: string
+          rating?: number
+          replied_at?: string | null
+          replied_by?: string | null
+          reply_text?: string | null
+          shop_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_reviews_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_reviews_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_shops: {
         Row: {
           access_expires_at: string | null
@@ -407,6 +583,11 @@ export type Database = {
           region: string | null
           status: string
           stock_ratio: number
+          boost_enabled: boolean
+          last_boost_at: string | null
+          review_auto_reply: boolean
+          review_signature: string | null
+          reviews_synced_at: string | null
           orders_synced_until: string | null
           price_sync_enabled: boolean
           ship_mode: string
@@ -431,6 +612,11 @@ export type Database = {
           region?: string | null
           status?: string
           stock_ratio?: number
+          boost_enabled?: boolean
+          last_boost_at?: string | null
+          review_auto_reply?: boolean
+          review_signature?: string | null
+          reviews_synced_at?: string | null
           orders_synced_until?: string | null
           price_sync_enabled?: boolean
           ship_mode?: string
@@ -455,6 +641,11 @@ export type Database = {
           region?: string | null
           status?: string
           stock_ratio?: number
+          boost_enabled?: boolean
+          last_boost_at?: string | null
+          review_auto_reply?: boolean
+          review_signature?: string | null
+          reviews_synced_at?: string | null
           orders_synced_until?: string | null
           price_sync_enabled?: boolean
           ship_mode?: string
@@ -2328,6 +2519,15 @@ export type Database = {
       marketplace_publication_payload: {
         Args: { p_publication: string }
         Returns: Json
+      }
+      marketing_shop_settings: {
+        Args: {
+          p_shop: string
+          p_boost_enabled: boolean
+          p_review_auto_reply: boolean
+          p_review_signature: string | null
+        }
+        Returns: undefined
       }
       marketplace_finish_job: {
         Args: { p_job: number; p_ok: boolean; p_error?: string | null }

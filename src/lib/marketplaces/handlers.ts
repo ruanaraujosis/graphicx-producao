@@ -8,6 +8,14 @@ import { ShopeeError } from "./shopee/client";
 import { requireShopeeConfig } from "./shopee/config";
 import { arrangeShipment, getTrackingNumber, type ShipMode } from "./shopee/logistics";
 import {
+  boostItems,
+  getBoostedItems,
+  getComments,
+  pickBoostItems,
+  replyComments,
+} from "./shopee/marketing";
+import { AUTO_REPLY_MIN_STARS, buyerFirstName, suggestReply } from "./replies";
+import {
   getOrderDetails,
   getOrderFee,
   listOrderSns,
@@ -508,5 +516,165 @@ export const handlers: Record<string, JobHandler> = {
       message: "Link da arte enviado ao comprador pelo chat da Shopee.",
       actor_label: "Shopee",
     });
+  },
+
+  // Impulsiona até 5 anúncios da lista de prioridade (rodízio a cada 4 h).
+  "boost.run": async ({ shop }) => {
+    if (!shop.boost_enabled) return;
+    const db = admin();
+    const config = requireShopeeConfig();
+    const creds = await shopCredentials(shop);
+    const onLog = logger(shop);
+    const [{ data: items }, { data: listings }, boostedNow] = await Promise.all([
+      db
+        .from("marketplace_boost_items")
+        .select("id, external_item_id, position, active, last_boosted_at")
+        .eq("shop_id", shop.id),
+      db
+        .from("marketplace_listings")
+        .select("external_item_id, external_stock, last_stock_sent")
+        .eq("shop_id", shop.id)
+        .neq("status", "excluido"),
+      getBoostedItems(config, creds, { onLog }),
+    ]);
+    // Estoque do anúncio = soma das variações (nulo se não se sabe).
+    const stock = new Map<string, number | null>();
+    for (const l of listings ?? []) {
+      const s = l.last_stock_sent ?? l.external_stock;
+      const prev = stock.get(l.external_item_id);
+      stock.set(l.external_item_id, s === null ? (prev ?? null) : (prev ?? 0) + s);
+    }
+    const chosen = pickBoostItems(
+      (items ?? []).map((i) => ({ ...i, stock: stock.get(i.external_item_id) ?? null })),
+      boostedNow,
+    );
+    const now = new Date().toISOString();
+    if (chosen.length) {
+      const failed = await boostItems(config, creds, chosen, { onLog });
+      for (const itemId of chosen) {
+        const reason = failed.get(itemId);
+        await db
+          .from("marketplace_boost_items")
+          .update(
+            reason
+              ? { last_error: reason.slice(0, 500) }
+              : { last_boosted_at: now, last_error: null },
+          )
+          .eq("shop_id", shop.id)
+          .eq("external_item_id", itemId);
+      }
+    }
+    await db.from("marketplace_shops").update({ last_boost_at: now }).eq("id", shop.id);
+  },
+
+  // Traz as avaliações novas; 4–5★ respondidas sozinhas, 1–3★ ficam com sugestão.
+  "reviews.import": async ({ shop }) => {
+    const db = admin();
+    const comments = await getComments(requireShopeeConfig(), await shopCredentials(shop), {
+      onLog: logger(shop),
+    });
+    const ids = comments.map((c) => String(c.comment_id));
+    const [{ data: known }, { data: templates }, { data: listings }] = await Promise.all([
+      ids.length
+        ? db
+            .from("marketplace_reviews")
+            .select("external_comment_id")
+            .eq("shop_id", shop.id)
+            .in("external_comment_id", ids)
+        : Promise.resolve({ data: [] as { external_comment_id: string }[] }),
+      db
+        .from("marketplace_reply_templates")
+        .select("min_stars, max_stars, body")
+        .eq("organization_id", shop.organization_id)
+        .eq("active", true),
+      db.from("marketplace_listings").select("external_item_id, title").eq("shop_id", shop.id),
+    ]);
+    const seen = new Set((known ?? []).map((k) => k.external_comment_id));
+    const titles = new Map((listings ?? []).map((l) => [l.external_item_id, l.title]));
+    const loja = shop.review_signature || shop.name || "nossa loja";
+
+    for (const c of comments) {
+      const commentId = String(c.comment_id);
+      if (seen.has(commentId)) continue;
+      const rating = Math.min(5, Math.max(1, c.rating_star ?? 5));
+      const itemId = c.item_id ? String(c.item_id) : null;
+      const already = c.comment_reply?.reply?.trim();
+      const auto = !already && shop.review_auto_reply && rating >= AUTO_REPLY_MIN_STARS;
+      const reply =
+        already ||
+        suggestReply({
+          rating,
+          templates: templates ?? [],
+          vars: {
+            comprador: buyerFirstName(c.buyer_username),
+            produto: (itemId && titles.get(itemId)) || "",
+            loja,
+          },
+          seed: commentId,
+        });
+      const { data: row } = await db
+        .from("marketplace_reviews")
+        .insert({
+          organization_id: shop.organization_id,
+          shop_id: shop.id,
+          external_comment_id: commentId,
+          external_item_id: itemId,
+          item_title: itemId ? (titles.get(itemId) ?? null) : null,
+          rating,
+          comment: c.comment?.slice(0, 2000) ?? null,
+          buyer_name: c.buyer_username?.slice(0, 120) ?? null,
+          commented_at: c.create_time ? new Date(c.create_time * 1000).toISOString() : null,
+          reply_text: reply.slice(0, 500) || null,
+          status: already ? "respondida" : auto ? "enviando" : "pendente",
+          auto,
+          replied_at: already ? new Date().toISOString() : null,
+        })
+        .select("id")
+        .single();
+      if (row && auto) {
+        await db.rpc("marketplace_enqueue", {
+          p_shop: shop.id,
+          p_kind: "reviews.reply",
+          p_payload: { review_id: row.id },
+          p_dedupe: `reply:${row.id}`,
+        });
+      }
+    }
+    await db
+      .from("marketplace_shops")
+      .update({ reviews_synced_at: new Date().toISOString() })
+      .eq("id", shop.id);
+  },
+
+  // Envia a resposta de uma avaliação.
+  "reviews.reply": async ({ job, shop }) => {
+    const reviewId = (job.payload as { review_id?: string }).review_id;
+    if (!reviewId) throw new PermanentError("Avaliação não informada.");
+    const db = admin();
+    const { data: review } = await db
+      .from("marketplace_reviews")
+      .select("id, external_comment_id, reply_text, status")
+      .eq("id", reviewId)
+      .eq("shop_id", shop.id)
+      .maybeSingle();
+    if (!review) throw new PermanentError("Avaliação não encontrada nesta loja.");
+    if (review.status === "respondida" || review.status === "ignorada") return;
+    if (!review.reply_text?.trim()) throw new PermanentError("Resposta vazia.");
+    const failed = await replyComments(
+      requireShopeeConfig(),
+      await shopCredentials(shop),
+      [{ commentId: review.external_comment_id, text: review.reply_text }],
+      { onLog: logger(shop) },
+    );
+    const reason = failed.get(review.external_comment_id);
+    await db
+      .from("marketplace_reviews")
+      .update(
+        reason
+          ? { status: "erro", error: reason.slice(0, 500) }
+          : { status: "respondida", replied_at: new Date().toISOString(), error: null },
+      )
+      .eq("id", review.id);
+    if (reason) throw new PermanentError(`Shopee recusou a resposta: ${reason}`);
   },
 };

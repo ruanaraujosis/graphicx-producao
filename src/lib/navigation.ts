@@ -3,6 +3,7 @@ import {
   Building2,
   Contact,
   House,
+  Megaphone,
   Palette,
   Settings,
   ShoppingBag,
@@ -68,6 +69,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: Contact,
     scope: "org",
     permission: ["cadastros.ver", "pedidos.ver", "estoque.ver", "financeiro.ver"],
+  },
+  {
+    href: "/marketing",
+    label: "Marketing",
+    icon: Megaphone,
+    scope: "org",
+    permission: "marketing.ver",
   },
   {
     href: "/financeiro",

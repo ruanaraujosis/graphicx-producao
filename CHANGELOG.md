@@ -4,6 +4,15 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+### Fase 7 — Marketing Shopee
+
+#### Adicionado
+
+- **Marketing** (menu novo, permissão própria `marketing`): impulsionamento automático dos anúncios da Shopee a cada 4 horas, com lista de prioridade em rodízio (5 por vez, pula pausados e sem estoque).
+- **Avaliações da Shopee** trazidas a cada hora: 4 e 5 estrelas respondidas sozinhas; 1 a 3 estrelas ficam com resposta sugerida para revisar, editar, enviar ou ignorar.
+- **Modelos de resposta** por faixa de estrelas (tom amigável), com {comprador}, {produto} e {loja}, editáveis pela gráfica; assinatura por loja.
+- Verificador de ambiente confere as variáveis da Shopee e o `CRON_SECRET`.
+
 ## [0.5.0] - 2026-10-15
 
 ### Fase 5 — Shopee
