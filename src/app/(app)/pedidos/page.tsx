@@ -1,4 +1,4 @@
-import { AlarmClock, ClipboardList, Hourglass, Palette, Plus } from "lucide-react";
+import { AlarmClock, ClipboardList, Hourglass, Palette, Plus, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { cn } from "cn";
@@ -139,12 +139,20 @@ async function Pedidos({ searchParams }: { searchParams: Params }) {
         description="Todos os canais numa lista só, com a data limite de postagem."
         actions={
           canManage ? (
-            <Button asChild>
-              <Link href="/pedidos/novo">
-                <Plus />
-                Novo pedido
-              </Link>
-            </Button>
+            <>
+              <Button asChild variant="outline">
+                <Link href="/pedidos/venda-rapida">
+                  <ShoppingCart />
+                  Venda rápida
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="/pedidos/novo">
+                  <Plus />
+                  Novo pedido
+                </Link>
+              </Button>
+            </>
           ) : undefined
         }
       />

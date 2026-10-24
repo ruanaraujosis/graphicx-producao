@@ -2603,6 +2603,10 @@ export type Database = {
         Args: { p_order: string; p_items: Json };
         Returns: undefined;
       };
+      quick_sale: {
+        Args: { p_org: string; p_fields: Json; p_items: Json; p_paid?: boolean };
+        Returns: string;
+      };
       rate_limit_hit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };
         Returns: boolean;
