@@ -4,6 +4,8 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [0.6.0] - 2026-10-23
+
 ### Fase 7 — Marketing Shopee
 
 #### Adicionado
