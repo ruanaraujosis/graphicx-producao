@@ -313,7 +313,22 @@ export function QuickSale({
               }))
             }
           />
-          {!customerId && customerName.trim().length >= 2 && (
+          {customerId ? (
+            <p className="flex flex-wrap items-center gap-2 text-xs text-success">
+              Cliente cadastrado selecionado.
+              <button
+                type="button"
+                className="min-h-11 text-muted-foreground underline md:min-h-0"
+                onClick={() => {
+                  setCustomerId(null);
+                  setCustomerName("");
+                  setCustomerPhone("");
+                }}
+              >
+                Trocar
+              </button>
+            </p>
+          ) : (
             <NewCustomerButton
               name={customerName}
               phone={customerPhone}
