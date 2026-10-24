@@ -30,6 +30,13 @@ const RULES = {
   ADMIN_USERNAME: { public: true },
   ADMIN_EMAIL: { public: true },
   ADMIN_PASSWORD: { mustBeEmptyAfterSetup: true },
+  // Integração com a Shopee (opcionais: sem elas, a tela de Integrações mostra "em breve").
+  SHOPEE_PARTNER_ID: { format: /^\d{4,12}$/ },
+  SHOPEE_PARTNER_KEY: { format: /^\S{20,}$/ },
+  SHOPEE_ENV: { public: true, format: /^(sandbox|producao)$/ },
+  SHOPEE_API_HOST: { public: true, format: /^https:\/\/\S+$/ },
+  // Protege o processador da fila (/api/marketplaces/worker); o mesmo valor vai no Vault.
+  CRON_SECRET: { format: /^\S{32,}$/ },
 };
 
 function parse(text) {

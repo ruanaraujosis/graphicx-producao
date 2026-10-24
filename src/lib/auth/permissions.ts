@@ -63,6 +63,12 @@ export const PERMISSION_MODULES = [
     actions: ["ver", "gerenciar"],
   },
   {
+    key: "marketing",
+    label: "Marketing",
+    description: "Impulsionamento de anúncios e respostas às avaliações da Shopee.",
+    actions: ["ver", "gerenciar"],
+  },
+  {
     key: "relatorios",
     label: "Relatórios",
     description: "Relatórios gerenciais e exportações.",

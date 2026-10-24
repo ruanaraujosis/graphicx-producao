@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireOrg } from "@/lib/auth/dal";
 import { customerSchema } from "@/app/(app)/cadastros/clientes/schema";
@@ -85,6 +86,76 @@ export async function saveOrder(
     ok: true,
     message: v.as_quote ? "Orçamento criado." : "Pedido criado.",
     data: { id: data },
+  };
+}
+
+const quickSaleSchema = z.object({
+  channel: z.enum(["balcao", "whatsapp"]),
+  customer_id: z.uuid().nullable(),
+  customer_name: z.string().trim().max(160),
+  customer_phone: z.string().trim().max(20),
+  payment_method_id: z.uuid().nullable(),
+  discount: z.number().min(0).max(10_000_000),
+  paid: z.boolean(),
+  items: z
+    .array(
+      z.object({
+        variant_id: z.uuid().nullable(),
+        description: z.string().trim().min(1).max(300),
+        quantity: z.number().positive().max(1_000_000),
+        unit_price: z.number().min(0).max(10_000_000),
+      }),
+    )
+    .min(1, "Inclua pelo menos um produto.")
+    .max(100, "Máximo de 100 itens."),
+});
+
+/**
+ * Venda rápida no balcão: o pedido nasce entregue, o estoque é baixado na hora
+ * e, com "pago agora", a conta a receber já fica recebida.
+ */
+export async function quickSale(
+  input: unknown,
+): Promise<ActionResult<{ id: string; number: number }>> {
+  const { membership } = await requireOrg("pedidos.gerenciar");
+  const parsed = quickSaleSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Confira a venda." };
+  const v = parsed.data;
+  const subtotal = v.items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
+  if (v.discount > subtotal) return { ok: false, error: "O desconto é maior que o total." };
+  const phone = digits(v.customer_phone);
+
+  const supabase = await createClient();
+  const { data: id, error } = await supabase.rpc("quick_sale", {
+    p_org: membership.organizationId,
+    p_fields: {
+      channel: v.channel,
+      customer_id: v.customer_id ?? "",
+      customer_name: v.customer_name.length >= 2 ? v.customer_name : "Consumidor final",
+      customer_phone: phone.length >= 10 ? phone : "",
+      payment_method_id: v.payment_method_id ?? "",
+      discount: v.discount,
+      shipping: 0,
+    },
+    p_items: v.items.map((i) => ({ ...i, id: "", variant_id: i.variant_id ?? "" })),
+    p_paid: v.paid,
+  });
+  if (error || !id)
+    return {
+      ok: false,
+      error: error
+        ? dbErrorMessage(error, { fallback: "Não foi possível lançar a venda." })
+        : "Erro.",
+    };
+  const { data: order } = await supabase.from("orders").select("number").eq("id", id).single();
+  revalidateOrders();
+  revalidatePath("/financeiro");
+  revalidatePath("/estoque");
+  return {
+    ok: true,
+    message: `Venda #${order?.number ?? ""} lançada.`,
+    data: { id, number: order?.number ?? 0 },
   };
 }
 

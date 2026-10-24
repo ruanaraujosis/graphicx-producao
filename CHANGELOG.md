@@ -4,6 +4,23 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [0.6.0] - 2026-10-23
+
+### Fase 7 — Marketing Shopee
+
+#### Adicionado
+
+- **Marketing** (menu novo, permissão própria `marketing`): impulsionamento automático dos anúncios da Shopee a cada 4 horas, com lista de prioridade em rodízio (5 por vez, pula pausados e sem estoque).
+- **Avaliações da Shopee** trazidas a cada hora: 4 e 5 estrelas respondidas sozinhas; 1 a 3 estrelas ficam com resposta sugerida para revisar, editar, enviar ou ignorar.
+- **Modelos de resposta** por faixa de estrelas (tom amigável), com {comprador}, {produto} e {loja}, editáveis pela gráfica; assinatura por loja.
+- Verificador de ambiente confere as variáveis da Shopee e o `CRON_SECRET`.
+- **Venda rápida** (Pedidos → Venda rápida): balcão em uma tela, com leitor de código (SKU + Enter), quantidade, desconto, pagamento e cliente opcional; o pedido nasce entregue, o estoque é baixado na hora e, com "pagamento recebido agora", a conta já fica recebida.
+- **Início vira o dashboard:** vendas de hoje e do mês, meta, pedidos em andamento, prazos de hoje, atrasados, artes aguardando, estoque crítico, avaliações para revisar, produção por etapa, próximos prazos e últimas vendas (cada bloco conforme a permissão).
+
+#### Segurança
+
+- Next.js 16.4.3 e zod 4.6.7 (vulnerabilidades conhecidas); `npm audit` sem pendências.
+
 ## [0.5.0] - 2026-10-15
 
 ### Fase 5 — Shopee
