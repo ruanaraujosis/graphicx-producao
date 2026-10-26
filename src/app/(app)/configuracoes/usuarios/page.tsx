@@ -17,6 +17,7 @@ import { can, expandPermissions, roleRequiresMfa } from "@/lib/auth/permissions"
 import { formatDate, initials } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "cn";
+import { CommissionCell } from "./commission-cell";
 import {
   CreateMemberDialog,
   MemberActions,
@@ -60,8 +61,11 @@ function StatusPill({ active }: { active: boolean }) {
 async function UsersContent() {
   const { session, membership } = await requireOrg("equipe.ver");
   const canManage = can(membership.permissions, "equipe.gerenciar");
+  // Comissão é dinheiro: aparece com o financeiro e só quem o gerencia altera.
+  const seeCommission = can(membership.permissions, "financeiro.ver");
+  const canEditCommission = can(membership.permissions, "financeiro.gerenciar");
   const supabase = await createClient();
-  const [{ data, error }, { data: roleRows }] = await Promise.all([
+  const [{ data, error }, { data: roleRows }, { data: commissionRows }] = await Promise.all([
     supabase
       .from("organization_members")
       .select(
@@ -74,7 +78,14 @@ async function UsersContent() {
       .eq("organization_id", membership.organizationId)
       .order("is_admin", { ascending: false })
       .order("name"),
+    seeCommission
+      ? supabase
+          .from("seller_commissions")
+          .select("user_id, rate")
+          .eq("organization_id", membership.organizationId)
+      : Promise.resolve({ data: null }),
   ]);
+  const rates = new Map((commissionRows ?? []).map((c) => [c.user_id, Number(c.rate)]));
 
   // Só aparecem para escolha os perfis que quem está logado pode atribuir (o banco também confere).
   const roles: RoleOption[] = (roleRows ?? [])
@@ -135,6 +146,14 @@ async function UsersContent() {
   // Quem só tem "equipe.ver" vê a lista, sem o menu de ações.
   const actions = (member: TeamMember) =>
     canManage ? <MemberActions member={member} roles={roles} /> : null;
+  const commission = (member: TeamMember) => (
+    <CommissionCell
+      userId={member.userId}
+      name={member.fullName}
+      rate={rates.get(member.userId) ?? null}
+      canEdit={canEditCommission}
+    />
+  );
 
   const person = (member: TeamMember, size: "sm" | "md") => (
     <div className="flex min-w-0 items-center gap-3">
@@ -181,6 +200,12 @@ async function UsersContent() {
                 desde {formatDate(member.since)}
               </span>
             </div>
+            {seeCommission && (
+              <div className="flex items-center justify-between gap-2 border-t pt-3 text-sm">
+                <span className="text-muted-foreground">Comissão</span>
+                {commission(member)}
+              </div>
+            )}
           </li>
         ))}
       </ul>
@@ -190,9 +215,12 @@ async function UsersContent() {
         <Table className="table-fixed">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[42%] pl-5">Pessoa</TableHead>
-              <TableHead className="w-[24%]">Perfil</TableHead>
-              <TableHead className="w-[14%]">Status</TableHead>
+              <TableHead className={cn("pl-5", seeCommission ? "w-[34%]" : "w-[42%]")}>
+                Pessoa
+              </TableHead>
+              <TableHead className={seeCommission ? "w-[20%]" : "w-[24%]"}>Perfil</TableHead>
+              <TableHead className={seeCommission ? "w-[12%]" : "w-[14%]"}>Status</TableHead>
+              {seeCommission && <TableHead className="w-[14%]">Comissão</TableHead>}
               <TableHead className="w-[12%]">Desde</TableHead>
               <TableHead className="w-[8%] pr-5 text-right">
                 <span className="sr-only">Ações</span>
@@ -209,6 +237,7 @@ async function UsersContent() {
                 <TableCell>
                   <StatusPill active={member.active} />
                 </TableCell>
+                {seeCommission && <TableCell>{commission(member)}</TableCell>}
                 <TableCell className="text-muted-foreground">{formatDate(member.since)}</TableCell>
                 <TableCell className="pr-5 text-right">{actions(member)}</TableCell>
               </TableRow>

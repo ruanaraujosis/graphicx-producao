@@ -15,6 +15,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import {
+  commissionSchema,
   createMemberSchema,
   resetPasswordSchema,
   updateMemberSchema,
@@ -206,5 +207,42 @@ export async function resetMemberMfa(userId: string): Promise<ActionResult> {
     ok: true,
     message:
       "Verificação em duas etapas redefinida. No próximo login a pessoa cadastra o app de novo.",
+  };
+}
+
+/**
+ * Define (ou tira) a comissão de um colaborador. Comissão é dinheiro: exige o
+ * financeiro (o RLS confere de novo a permissão e se a pessoa é da gráfica).
+ */
+export async function setCommission(userId: string, input: unknown): Promise<ActionResult> {
+  const { membership } = await requireOrg("financeiro.gerenciar");
+  if (!z.uuid().safeParse(userId).success) return { ok: false, error: "Pessoa inválida." };
+  const parsed = commissionSchema.safeParse(input);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Comissão inválida." };
+
+  const supabase = await createClient();
+  const org = membership.organizationId;
+  const { rate } = parsed.data;
+  const { error } =
+    rate === null
+      ? await supabase
+          .from("seller_commissions")
+          .delete()
+          .eq("organization_id", org)
+          .eq("user_id", userId)
+      : await supabase
+          .from("seller_commissions")
+          .upsert(
+            { organization_id: org, user_id: userId, rate },
+            { onConflict: "organization_id,user_id" },
+          );
+  if (error) return { ok: false, error: dbError(error, "Não foi possível salvar a comissão.") };
+  revalidatePath(PAGE);
+  revalidatePath("/inicio");
+  return {
+    ok: true,
+    message:
+      rate === null ? "Comissão removida." : `Comissão de ${rate.toLocaleString("pt-BR")}% salva.`,
   };
 }

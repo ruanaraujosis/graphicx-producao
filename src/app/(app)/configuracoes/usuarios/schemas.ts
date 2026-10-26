@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { emailSchema, passwordSchema, usernameSchema } from "@/lib/auth/username";
+import { decimal } from "@/lib/form-schemas";
 
 const fullName = z.string().trim().min(2, "Informe o nome completo.").max(120, "Nome muito longo.");
 const roleId = z.uuid({ error: "Escolha o perfil de acesso." });
@@ -44,3 +45,8 @@ export const resetPasswordSchema = z
 export type CreateMemberInput = z.input<typeof createMemberSchema>;
 export type UpdateMemberInput = z.input<typeof updateMemberSchema>;
 export type ResetPasswordInput = z.input<typeof resetPasswordSchema>;
+
+/** Comissão do colaborador: percentual sobre as vendas que ele lança; vazio = sem comissão. */
+export const commissionSchema = z.object({
+  rate: decimal({ label: "Comissão", min: 0, max: 100, optional: true }),
+});

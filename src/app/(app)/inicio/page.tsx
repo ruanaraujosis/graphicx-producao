@@ -15,20 +15,20 @@ import { Suspense } from "react";
 import { ChannelBadge } from "@/components/kit/channel-badge";
 import { DueBadge, StatusPill } from "@/components/kit/order-badges";
 import { PageHeader } from "@/components/kit/page-header";
-import { IconChip, StatCard, type Tone } from "@/components/kit/stat-card";
+import { StatCard } from "@/components/kit/stat-card";
 import { Button } from "@/components/ui/button";
 import { requireOrg } from "@/lib/auth/dal";
 import { can } from "@/lib/auth/permissions";
 import { progressPct } from "@/lib/finance/goals";
 import { formatCurrency, formatDateTime, TIME_ZONE } from "@/lib/format";
-import { navItemsFor } from "@/lib/navigation";
 import { todayIso } from "@/lib/orders/deadline";
+import { teamStats } from "@/lib/orders/ranking";
 import { BOARD_STATUSES, STATUS_LABELS, orderNumber, type OrderStatus } from "@/lib/orders/status";
 import { createClient } from "@/lib/supabase/server";
+import { TeamRankingTable } from "./team-ranking";
 
 export const metadata = { title: "Início" };
 
-const SHORTCUT_TONES: Tone[] = ["primary", "teal", "info", "success", "warning"];
 /** Etapas em que o pedido ainda está em andamento. */
 const OPEN = BOARD_STATUSES.filter((s) => !["enviado", "entregue"].includes(s));
 
@@ -49,14 +49,9 @@ export default function InicioPage() {
       >
         <Dashboard />
       </Suspense>
-      <section aria-labelledby="atalhos" className="flex flex-col gap-3">
-        <h2 id="atalhos" className="font-heading text-base font-semibold">
-          Atalhos
-        </h2>
-        <Suspense fallback={<div className="h-20 animate-pulse rounded-2xl bg-muted" />}>
-          <Shortcuts />
-        </Suspense>
-      </section>
+      <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-muted" />}>
+        <TeamRanking />
+      </Suspense>
     </div>
   );
 }
@@ -424,24 +419,103 @@ async function Dashboard() {
   );
 }
 
-async function Shortcuts() {
-  const { session, membership } = await requireOrg();
-  const items = navItemsFor({
-    permissions: membership.permissions,
-    isPlatformAdmin: session.isPlatformAdmin,
-  }).filter((item) => item.href !== "/inicio");
+/** Início do mês anterior ao da data (AAAA-MM-01). */
+function previousMonthStart(today: string) {
+  const [year, month] = today.split("-").map(Number);
+  const prev = month === 1 ? `${year - 1}-12` : `${year}-${String(month - 1).padStart(2, "0")}`;
+  return `${prev}-01`;
+}
+
+async function TeamRanking() {
+  const { membership } = await requireOrg();
+  const org = membership.organizationId;
+  const perms = membership.permissions;
+  const showSales = can(perms, "pedidos.ver");
+  const showProduction = can(perms, "pcp.ver");
+  const showMoney = showSales && can(perms, "financeiro.ver");
+  if (!showSales && !showProduction) return null;
+
+  // Horário de Brasília (sem horário de verão desde 2019).
+  const at = (day: string) => `${day}T00:00:00-03:00`;
+  const today = todayIso();
+  const monthStart = at(`${today.slice(0, 7)}-01`);
+  const lastMonthStart = at(previousMonthStart(today));
+  const supabase = await createClient();
+  const none = Promise.resolve({ data: null });
+
+  const [membersRes, salesRes, producedRes, ratesRes] = await Promise.all([
+    supabase
+      .from("organization_members")
+      .select("user_id, profiles(full_name), organization_roles(name)")
+      .eq("organization_id", org)
+      .eq("active", true),
+    // Pedidos da Shopee entram sozinhos: não contam como venda de ninguém.
+    showSales
+      ? supabase
+          .from("orders")
+          .select("created_by, total, confirmed_at")
+          .eq("organization_id", org)
+          .neq("channel", "shopee")
+          .not("status", "in", "(orcamento,cancelado)")
+          .gte("confirmed_at", lastMonthStart)
+          .limit(20000)
+      : none,
+    // Produzido = pedido que a pessoa levou à Expedição (fim da produção).
+    showProduction
+      ? supabase
+          .from("order_events")
+          .select("order_id, actor_id, created_at")
+          .eq("organization_id", org)
+          .eq("type", "status")
+          .eq("to_status", "expedicao")
+          .gte("created_at", lastMonthStart)
+          .limit(20000)
+      : none,
+    showMoney
+      ? supabase.from("seller_commissions").select("user_id, rate").eq("organization_id", org)
+      : none,
+  ]);
+
+  const members = (membersRes.data ?? [])
+    .filter((m) => m.profiles)
+    .map((m) => ({
+      userId: m.user_id,
+      name: m.profiles?.full_name ?? "",
+      role: m.organization_roles?.name ?? null,
+    }));
+  const sales = (salesRes.data ?? []).map((o) => ({
+    userId: o.created_by,
+    total: o.total,
+    at: o.confirmed_at ?? "",
+  }));
+  const produced = (producedRes.data ?? []).map((e) => ({
+    userId: e.actor_id,
+    orderId: e.order_id,
+    at: e.created_at,
+  }));
+  const rates = new Map((ratesRes.data ?? []).map((r) => [r.user_id, Number(r.rate)]));
+  const stats = (from: string, to?: string) => teamStats(members, sales, produced, rates, from, to);
+  const monthName = (iso: string) => {
+    const name = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: TIME_ZONE }).format(
+      new Date(iso),
+    );
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      {items.map((item, index) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm transition-shadow outline-none hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          <IconChip icon={item.icon} tone={SHORTCUT_TONES[index % SHORTCUT_TONES.length]} />
-          <p className="truncate text-sm font-medium">{item.label}</p>
-        </Link>
-      ))}
-    </div>
+    <TeamRankingTable
+      periods={[
+        { key: "hoje", label: "Hoje", rows: stats(at(today)) },
+        { key: "mes", label: monthName(monthStart), rows: stats(monthStart) },
+        {
+          key: "mes-passado",
+          label: monthName(lastMonthStart),
+          rows: stats(lastMonthStart, monthStart),
+        },
+      ]}
+      showSales={showSales}
+      showMoney={showMoney}
+      showProduction={showProduction}
+    />
   );
 }
