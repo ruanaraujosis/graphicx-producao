@@ -8,7 +8,11 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ### Alterado
 
-- **Início:** os atalhos deram lugar ao **ranking da equipe** do mês: quem mais vendeu (pedidos confirmados que a pessoa lançou; os da Shopee não contam, e o valor em R$ só aparece para quem vê o financeiro) e quem mais produziu (pedidos que a pessoa levou à Expedição).
+- **Início:** os atalhos deram lugar ao **ranking da equipe** (Hoje, mês atual e mês passado), em tabela com colunas ordenáveis no computador e cards no celular: vendas, pedidos, ticket médio, comissão, pedidos produzidos e última venda de cada pessoa. Vendas são os pedidos confirmados que a pessoa lançou (os da Shopee não contam); produzidos são os pedidos que a pessoa levou à Expedição. Valores em R$ e comissão só aparecem para quem vê o financeiro.
+
+### Adicionado
+
+- **Comissão por vendedor:** percentual sobre as vendas, definido no próprio ranking por quem gerencia o financeiro (tabela `seller_commissions` com RLS; cada pessoa só lê a própria).
 
 ## [1.0.2] - 2026-10-26
 

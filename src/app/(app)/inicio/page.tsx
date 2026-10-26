@@ -8,10 +8,8 @@ import {
   Plus,
   ShoppingCart,
   TrendingUp,
-  Trophy,
   Wallet,
 } from "lucide-react";
-import { cn } from "cn";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ChannelBadge } from "@/components/kit/channel-badge";
@@ -24,9 +22,10 @@ import { can } from "@/lib/auth/permissions";
 import { progressPct } from "@/lib/finance/goals";
 import { formatCurrency, formatDateTime, TIME_ZONE } from "@/lib/format";
 import { todayIso } from "@/lib/orders/deadline";
-import { rankBy, uniqueByOrder, type RankingEntry } from "@/lib/orders/ranking";
+import { teamStats } from "@/lib/orders/ranking";
 import { BOARD_STATUSES, STATUS_LABELS, orderNumber, type OrderStatus } from "@/lib/orders/status";
 import { createClient } from "@/lib/supabase/server";
+import { TeamRankingTable } from "./team-ranking";
 
 export const metadata = { title: "Início" };
 
@@ -420,148 +419,104 @@ async function Dashboard() {
   );
 }
 
-/** Cor da posição: 1º ouro, 2º e 3º em destaque, o resto neutro. */
-const PODIUM = [
-  "bg-warning-soft text-warning",
-  "bg-info-soft text-info",
-  "bg-secondary text-secondary-foreground",
-];
-
-function RankingList({
-  entries,
-  nameById,
-  value,
-  empty,
-}: {
-  entries: RankingEntry[];
-  nameById: Map<string, string>;
-  value: (e: RankingEntry) => string;
-  empty: string;
-}) {
-  if (entries.length === 0) return <p className="text-sm text-muted-foreground">{empty}</p>;
-  const max = Math.max(1, ...entries.map((e) => e.count));
-  return (
-    <ol className="flex flex-col gap-3">
-      {entries.map((e, index) => (
-        <li key={e.userId} className="flex items-center gap-3 text-sm">
-          <span
-            className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-full font-semibold tabular-nums",
-              PODIUM[index] ?? "bg-muted text-muted-foreground",
-            )}
-            aria-label={`${index + 1}º lugar`}
-          >
-            {index === 0 ? <Trophy className="size-4" aria-hidden /> : index + 1}
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="truncate font-medium">
-                {nameById.get(e.userId) ?? "Pessoa removida"}
-              </span>
-              <span className="shrink-0 text-muted-foreground tabular-nums">{value(e)}</span>
-            </div>
-            <span className="h-2 overflow-hidden rounded-full bg-muted">
-              <span
-                className="block h-full rounded-full bg-primary"
-                style={{ width: `${(e.count / max) * 100}%` }}
-              />
-            </span>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
+/** Início do mês anterior ao da data (AAAA-MM-01). */
+function previousMonthStart(today: string) {
+  const [year, month] = today.split("-").map(Number);
+  const prev = month === 1 ? `${year - 1}-12` : `${year}-${String(month - 1).padStart(2, "0")}`;
+  return `${prev}-01`;
 }
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 async function TeamRanking() {
   const { membership } = await requireOrg();
   const org = membership.organizationId;
   const perms = membership.permissions;
-  const seeSales = can(perms, "pedidos.ver");
-  const seeProduction = can(perms, "pcp.ver");
-  const seeMoney = can(perms, "financeiro.ver");
-  if (!seeSales && !seeProduction) return null;
+  const showSales = can(perms, "pedidos.ver");
+  const showProduction = can(perms, "pcp.ver");
+  const showMoney = showSales && can(perms, "financeiro.ver");
+  if (!showSales && !showProduction) return null;
 
-  const since = `${todayIso().slice(0, 7)}-01T00:00:00-03:00`;
+  // Horário de Brasília (sem horário de verão desde 2019).
+  const at = (day: string) => `${day}T00:00:00-03:00`;
+  const today = todayIso();
+  const monthStart = at(`${today.slice(0, 7)}-01`);
+  const lastMonthStart = at(previousMonthStart(today));
   const supabase = await createClient();
   const none = Promise.resolve({ data: null });
-  const [salesRes, producedRes] = await Promise.all([
+
+  const [membersRes, salesRes, producedRes, ratesRes] = await Promise.all([
+    supabase
+      .from("organization_members")
+      .select("user_id, profiles(full_name), organization_roles(name)")
+      .eq("organization_id", org)
+      .eq("active", true),
     // Pedidos da Shopee entram sozinhos: não contam como venda de ninguém.
-    seeSales
+    showSales
       ? supabase
           .from("orders")
-          .select("created_by, total")
+          .select("created_by, total, confirmed_at")
           .eq("organization_id", org)
           .neq("channel", "shopee")
           .not("status", "in", "(orcamento,cancelado)")
-          .gte("confirmed_at", since)
-          .limit(10000)
+          .gte("confirmed_at", lastMonthStart)
+          .limit(20000)
       : none,
     // Produzido = pedido que a pessoa levou à Expedição (fim da produção).
-    seeProduction
+    showProduction
       ? supabase
           .from("order_events")
-          .select("order_id, actor_id")
+          .select("order_id, actor_id, created_at")
           .eq("organization_id", org)
           .eq("type", "status")
           .eq("to_status", "expedicao")
-          .gte("created_at", since)
-          .limit(10000)
+          .gte("created_at", lastMonthStart)
+          .limit(20000)
+      : none,
+    showMoney
+      ? supabase.from("seller_commissions").select("user_id, rate").eq("organization_id", org)
       : none,
   ]);
 
-  const sellers = rankBy(
-    (salesRes.data ?? []).map((o) => ({ userId: o.created_by, total: o.total })),
-    seeMoney ? "total" : "count",
-  );
-  const producers = rankBy(
-    uniqueByOrder(producedRes.data ?? []).map((e) => ({ userId: e.actor_id })),
-  );
-  const ids = [...new Set([...sellers, ...producers].map((e) => e.userId))];
-  const { data: people } = ids.length
-    ? await supabase.from("profiles").select("id, full_name").in("id", ids)
-    : { data: [] };
-  const nameById = new Map((people ?? []).map((p) => [p.id, p.full_name]));
-  const month = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: TIME_ZONE }).format(
-    new Date(),
-  );
+  const members = (membersRes.data ?? [])
+    .filter((m) => m.profiles)
+    .map((m) => ({
+      userId: m.user_id,
+      name: m.profiles?.full_name ?? "",
+      role: m.organization_roles?.name ?? null,
+    }));
+  const sales = (salesRes.data ?? []).map((o) => ({
+    userId: o.created_by,
+    total: o.total,
+    at: o.confirmed_at ?? "",
+  }));
+  const produced = (producedRes.data ?? []).map((e) => ({
+    userId: e.actor_id,
+    orderId: e.order_id,
+    at: e.created_at,
+  }));
+  const rates = new Map((ratesRes.data ?? []).map((r) => [r.user_id, Number(r.rate)]));
+  const stats = (from: string, to?: string) => teamStats(members, sales, produced, rates, from, to);
+  const monthName = (iso: string) => {
+    const name = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: TIME_ZONE }).format(
+      new Date(iso),
+    );
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
 
   return (
-    <section aria-labelledby="ranking" className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="ranking" className="font-heading text-base font-semibold">
-          Ranking da equipe
-        </h2>
-        <p className="text-sm text-muted-foreground">Desde o dia 1º de {month}</p>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        {seeSales && (
-          <Card title="Quem mais vendeu">
-            <RankingList
-              entries={sellers}
-              nameById={nameById}
-              value={(e) =>
-                seeMoney
-                  ? `${formatCurrency(e.total)} · ${plural(e.count, "pedido", "pedidos")}`
-                  : plural(e.count, "pedido", "pedidos")
-              }
-              empty="Nenhuma venda lançada pela equipe neste mês."
-            />
-          </Card>
-        )}
-        {seeProduction && (
-          <Card title="Quem mais produziu">
-            <RankingList
-              entries={producers}
-              nameById={nameById}
-              value={(e) => plural(e.count, "pedido pronto", "pedidos prontos")}
-              empty="Nenhum pedido chegou à Expedição neste mês."
-            />
-          </Card>
-        )}
-      </div>
-    </section>
+    <TeamRankingTable
+      periods={[
+        { key: "hoje", label: "Hoje", rows: stats(at(today)) },
+        { key: "mes", label: monthName(monthStart), rows: stats(monthStart) },
+        {
+          key: "mes-passado",
+          label: monthName(lastMonthStart),
+          rows: stats(lastMonthStart, monthStart),
+        },
+      ]}
+      showSales={showSales}
+      showMoney={showMoney}
+      showProduction={showProduction}
+      canEditCommission={showMoney && can(perms, "financeiro.gerenciar")}
+    />
   );
 }
