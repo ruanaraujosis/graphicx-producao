@@ -4,6 +4,10 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.0.0] - 2026-10-26
+
+Primeira versão em produção: um único banco Supabase de produção para todas as gráficas (isolamento por gráfica com RLS), separado do banco de desenvolvimento. Reúne as Fases 1 a 5 e 7 (a Fase 6, NF-e, foi adiada).
+
 ### Adicionado
 
 - **Backup por gráfica** (Plataforma → Backups): rotina diária automática (Vercel Cron) que copia todos os dados de cada gráfica, separados, para um armazenamento privado; guarda os últimos 14 automáticos; o SuperAdmin acompanha data, tamanho e registros e pode fazer um backup na hora, sem ver o conteúdo.
