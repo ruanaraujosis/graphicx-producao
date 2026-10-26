@@ -158,6 +158,13 @@ O CI (`.github/workflows/ci.yml`) roda formatação, lint, tipos, testes unitár
 5. **Release:** PR de `develop` para `main`. Com o CI verde, o merge publica a produção e aplica as migrations.
 6. **SuperAdmin de produção:** crie `.env.producao.local` (ignorado pelo Git) com as variáveis do projeto de produção e as de `ORG_*`/`ADMIN_*`, confira com `npm run env:verificar -- --producao` e rode `npm run plataforma:iniciar:producao`. Depois apague `ADMIN_PASSWORD` desse arquivo.
 
+### Um banco para todas as gráficas e backup por gráfica
+
+A produção usa **um único projeto Supabase** para todas as gráficas: cada linha carrega `organization_id` e o RLS isola uma gráfica da outra.
+
+- **Backup geral:** o plano gratuito do Supabase **não tem backup automático** e pausa o projeto após dias sem uso. Assinar o plano Pro quando as gráficas começarem a usar (backup diário e, opcionalmente, PITR).
+- **Backup por gráfica:** a rotina diária (Vercel Cron em `vercel.json`, 03h de Brasília → `/api/plataforma/backups`, protegida pelo `CRON_SECRET`) gera um JSON compactado com todas as tabelas da gráfica no bucket privado `backups` e guarda os últimos 14 automáticos. O SuperAdmin acompanha e dispara backups em **Plataforma → Backups**, vendo só metadados (data, tamanho, registros) — nunca o conteúdo. Arquivos (fotos, artes) ficam no Storage, na pasta da gráfica; chaves das lojas (Vault) não entram no backup.
+
 ## Variáveis de ambiente e segredos
 
 Veja [.env.example](.env.example). Segredos nunca entram no repositório: este repositório é **público**. As regras completas estão na skill [`segredos`](.claude/skills/segredos/SKILL.md). Proteções ativas:

@@ -1,7 +1,9 @@
-import { Building2, CircleOff, UsersRound } from "lucide-react";
+import { Building2, CircleOff, DatabaseBackup, UsersRound } from "lucide-react";
+import Link from "next/link";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/kit/page-header";
 import { StatCard } from "@/components/kit/stat-card";
+import { Button } from "@/components/ui/button";
 import { requirePlatformAdmin } from "@/lib/auth/dal";
 import { formatDate, initials } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -21,7 +23,17 @@ export default function PlataformaPage() {
       <PageHeader
         title="Plataforma"
         description="Gráficas clientes da GraphicX. Você vê cadastros e números gerais, não os pedidos delas."
-        actions={<CreateOrganizationDialog />}
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/plataforma/backups">
+                <DatabaseBackup />
+                Backups
+              </Link>
+            </Button>
+            <CreateOrganizationDialog />
+          </>
+        }
       />
       <Suspense
         fallback={

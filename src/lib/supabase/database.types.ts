@@ -1654,6 +1654,59 @@ export type Database = {
           },
         ];
       };
+      platform_backups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          kind: string
+          organization_id: string | null
+          organization_name: string
+          row_counts: Json
+          size_bytes: number | null
+          status: string
+          storage_path: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          kind: string
+          organization_id?: string | null
+          organization_name: string
+          row_counts?: Json
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          kind?: string
+          organization_id?: string | null
+          organization_name?: string
+          row_counts?: Json
+          size_bytes?: number | null
+          status?: string
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_backups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           id: string;
@@ -2520,6 +2573,7 @@ export type Database = {
         Args: { p_publication: string }
         Returns: Json
       }
+      backup_tables: { Args: never; Returns: string[] };
       marketing_shop_settings: {
         Args: {
           p_shop: string

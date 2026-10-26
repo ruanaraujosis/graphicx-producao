@@ -4,6 +4,10 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Backup por gráfica** (Plataforma → Backups): rotina diária automática (Vercel Cron) que copia todos os dados de cada gráfica, separados, para um armazenamento privado; guarda os últimos 14 automáticos; o SuperAdmin acompanha data, tamanho e registros e pode fazer um backup na hora, sem ver o conteúdo.
+
 ## [0.6.0] - 2026-10-23
 
 ### Fase 7 — Marketing Shopee

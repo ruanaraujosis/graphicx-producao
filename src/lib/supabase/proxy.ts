@@ -16,6 +16,8 @@ const PUBLIC_PATHS = [
   // Avisos dos marketplaces (assinatura conferida na rota) e o processador da fila (segredo).
   "/api/marketplaces/shopee/webhook",
   "/api/marketplaces/worker",
+  // Rotina diária de backup por gráfica (Vercel Cron, com segredo).
+  "/api/plataforma/backups",
   "/manifest.webmanifest",
   "/icon",
   "/apple-icon",
