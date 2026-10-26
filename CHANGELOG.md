@@ -4,6 +4,16 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.0.1] - 2026-10-26
+
+### Corrigido
+
+- **Backup por gráfica** chega de fato à produção: a regra `backups/` do `.gitignore` escondia o código (Plataforma → Backups dava 404 e a rotina diária não existia). Agora a regra vale só para a pasta da raiz.
+
+### Adicionado
+
+- `npm run plataforma:superadmin:producao`: cria só o SuperAdmin, sem gráfica.
+
 ## [1.0.0] - 2026-10-26
 
 Primeira versão em produção: um único banco Supabase de produção para todas as gráficas (isolamento por gráfica com RLS), separado do banco de desenvolvimento. Reúne as Fases 1 a 5 e 7 (a Fase 6, NF-e, foi adiada).

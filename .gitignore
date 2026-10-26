@@ -38,7 +38,8 @@ supabase/.env
 # Dados sensíveis / exportações
 *.dump
 *.sql.gz
-backups/
+# Só a pasta da raiz (exportações locais); o código em src/**/backups entra no Git.
+/backups/
 
 # Testes
 coverage/
