@@ -521,7 +521,7 @@ export function OrderForm({
 
       {/* Rodapé fixo com total e ações */}
       <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t bg-background/95 px-4 py-3 backdrop-blur md:sticky md:bottom-0 md:mx-0 md:rounded-2xl md:border md:px-5">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <dl className="flex gap-4 text-sm">
             <div>
               <dt className="text-xs text-muted-foreground">Subtotal</dt>
