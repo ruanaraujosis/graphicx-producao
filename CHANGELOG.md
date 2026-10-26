@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.1.0] - 2026-10-26
+
+### Alterado
+
+- **Início:** os atalhos deram lugar ao **ranking da equipe** do mês: quem mais vendeu (pedidos confirmados que a pessoa lançou; os da Shopee não contam, e o valor em R$ só aparece para quem vê o financeiro) e quem mais produziu (pedidos que a pessoa levou à Expedição).
+
 ## [1.0.2] - 2026-10-26
 
 ### Alterado

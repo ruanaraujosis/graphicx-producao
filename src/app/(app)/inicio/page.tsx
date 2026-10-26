@@ -8,27 +8,28 @@ import {
   Plus,
   ShoppingCart,
   TrendingUp,
+  Trophy,
   Wallet,
 } from "lucide-react";
+import { cn } from "cn";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ChannelBadge } from "@/components/kit/channel-badge";
 import { DueBadge, StatusPill } from "@/components/kit/order-badges";
 import { PageHeader } from "@/components/kit/page-header";
-import { IconChip, StatCard, type Tone } from "@/components/kit/stat-card";
+import { StatCard } from "@/components/kit/stat-card";
 import { Button } from "@/components/ui/button";
 import { requireOrg } from "@/lib/auth/dal";
 import { can } from "@/lib/auth/permissions";
 import { progressPct } from "@/lib/finance/goals";
 import { formatCurrency, formatDateTime, TIME_ZONE } from "@/lib/format";
-import { navItemsFor } from "@/lib/navigation";
 import { todayIso } from "@/lib/orders/deadline";
+import { rankBy, uniqueByOrder, type RankingEntry } from "@/lib/orders/ranking";
 import { BOARD_STATUSES, STATUS_LABELS, orderNumber, type OrderStatus } from "@/lib/orders/status";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Início" };
 
-const SHORTCUT_TONES: Tone[] = ["primary", "teal", "info", "success", "warning"];
 /** Etapas em que o pedido ainda está em andamento. */
 const OPEN = BOARD_STATUSES.filter((s) => !["enviado", "entregue"].includes(s));
 
@@ -49,14 +50,9 @@ export default function InicioPage() {
       >
         <Dashboard />
       </Suspense>
-      <section aria-labelledby="atalhos" className="flex flex-col gap-3">
-        <h2 id="atalhos" className="font-heading text-base font-semibold">
-          Atalhos
-        </h2>
-        <Suspense fallback={<div className="h-20 animate-pulse rounded-2xl bg-muted" />}>
-          <Shortcuts />
-        </Suspense>
-      </section>
+      <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-muted" />}>
+        <TeamRanking />
+      </Suspense>
     </div>
   );
 }
@@ -424,24 +420,148 @@ async function Dashboard() {
   );
 }
 
-async function Shortcuts() {
-  const { session, membership } = await requireOrg();
-  const items = navItemsFor({
-    permissions: membership.permissions,
-    isPlatformAdmin: session.isPlatformAdmin,
-  }).filter((item) => item.href !== "/inicio");
+/** Cor da posição: 1º ouro, 2º e 3º em destaque, o resto neutro. */
+const PODIUM = [
+  "bg-warning-soft text-warning",
+  "bg-info-soft text-info",
+  "bg-secondary text-secondary-foreground",
+];
+
+function RankingList({
+  entries,
+  nameById,
+  value,
+  empty,
+}: {
+  entries: RankingEntry[];
+  nameById: Map<string, string>;
+  value: (e: RankingEntry) => string;
+  empty: string;
+}) {
+  if (entries.length === 0) return <p className="text-sm text-muted-foreground">{empty}</p>;
+  const max = Math.max(1, ...entries.map((e) => e.count));
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      {items.map((item, index) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm transition-shadow outline-none hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          <IconChip icon={item.icon} tone={SHORTCUT_TONES[index % SHORTCUT_TONES.length]} />
-          <p className="truncate text-sm font-medium">{item.label}</p>
-        </Link>
+    <ol className="flex flex-col gap-3">
+      {entries.map((e, index) => (
+        <li key={e.userId} className="flex items-center gap-3 text-sm">
+          <span
+            className={cn(
+              "flex size-8 shrink-0 items-center justify-center rounded-full font-semibold tabular-nums",
+              PODIUM[index] ?? "bg-muted text-muted-foreground",
+            )}
+            aria-label={`${index + 1}º lugar`}
+          >
+            {index === 0 ? <Trophy className="size-4" aria-hidden /> : index + 1}
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="truncate font-medium">
+                {nameById.get(e.userId) ?? "Pessoa removida"}
+              </span>
+              <span className="shrink-0 text-muted-foreground tabular-nums">{value(e)}</span>
+            </div>
+            <span className="h-2 overflow-hidden rounded-full bg-muted">
+              <span
+                className="block h-full rounded-full bg-primary"
+                style={{ width: `${(e.count / max) * 100}%` }}
+              />
+            </span>
+          </div>
+        </li>
       ))}
-    </div>
+    </ol>
+  );
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+async function TeamRanking() {
+  const { membership } = await requireOrg();
+  const org = membership.organizationId;
+  const perms = membership.permissions;
+  const seeSales = can(perms, "pedidos.ver");
+  const seeProduction = can(perms, "pcp.ver");
+  const seeMoney = can(perms, "financeiro.ver");
+  if (!seeSales && !seeProduction) return null;
+
+  const since = `${todayIso().slice(0, 7)}-01T00:00:00-03:00`;
+  const supabase = await createClient();
+  const none = Promise.resolve({ data: null });
+  const [salesRes, producedRes] = await Promise.all([
+    // Pedidos da Shopee entram sozinhos: não contam como venda de ninguém.
+    seeSales
+      ? supabase
+          .from("orders")
+          .select("created_by, total")
+          .eq("organization_id", org)
+          .neq("channel", "shopee")
+          .not("status", "in", "(orcamento,cancelado)")
+          .gte("confirmed_at", since)
+          .limit(10000)
+      : none,
+    // Produzido = pedido que a pessoa levou à Expedição (fim da produção).
+    seeProduction
+      ? supabase
+          .from("order_events")
+          .select("order_id, actor_id")
+          .eq("organization_id", org)
+          .eq("type", "status")
+          .eq("to_status", "expedicao")
+          .gte("created_at", since)
+          .limit(10000)
+      : none,
+  ]);
+
+  const sellers = rankBy(
+    (salesRes.data ?? []).map((o) => ({ userId: o.created_by, total: o.total })),
+    seeMoney ? "total" : "count",
+  );
+  const producers = rankBy(
+    uniqueByOrder(producedRes.data ?? []).map((e) => ({ userId: e.actor_id })),
+  );
+  const ids = [...new Set([...sellers, ...producers].map((e) => e.userId))];
+  const { data: people } = ids.length
+    ? await supabase.from("profiles").select("id, full_name").in("id", ids)
+    : { data: [] };
+  const nameById = new Map((people ?? []).map((p) => [p.id, p.full_name]));
+  const month = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: TIME_ZONE }).format(
+    new Date(),
+  );
+
+  return (
+    <section aria-labelledby="ranking" className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="ranking" className="font-heading text-base font-semibold">
+          Ranking da equipe
+        </h2>
+        <p className="text-sm text-muted-foreground">Desde o dia 1º de {month}</p>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {seeSales && (
+          <Card title="Quem mais vendeu">
+            <RankingList
+              entries={sellers}
+              nameById={nameById}
+              value={(e) =>
+                seeMoney
+                  ? `${formatCurrency(e.total)} · ${plural(e.count, "pedido", "pedidos")}`
+                  : plural(e.count, "pedido", "pedidos")
+              }
+              empty="Nenhuma venda lançada pela equipe neste mês."
+            />
+          </Card>
+        )}
+        {seeProduction && (
+          <Card title="Quem mais produziu">
+            <RankingList
+              entries={producers}
+              nameById={nameById}
+              value={(e) => plural(e.count, "pedido pronto", "pedidos prontos")}
+              empty="Nenhum pedido chegou à Expedição neste mês."
+            />
+          </Card>
+        )}
+      </div>
+    </section>
   );
 }
