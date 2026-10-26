@@ -17,7 +17,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-40 border-b-[3px] border-brand-teal bg-brand-header text-brand-header-foreground shadow-sm">
-        <div className="mx-auto flex h-16 max-w-screen-2xl items-center justify-between gap-4 px-4 md:px-6">
+        <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-4">
             <Link
               href="/inicio"
@@ -35,7 +35,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-screen-2xl flex-1">
+      <div className="flex w-full flex-1">
         <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-64 shrink-0 overflow-y-auto border-r bg-sidebar p-4 md:block">
           <Suspense fallback={<SidebarNavSkeleton />}>
             <Sidebar />
