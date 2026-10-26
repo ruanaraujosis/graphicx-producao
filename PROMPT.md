@@ -64,7 +64,7 @@ Login por usuário/senha (o sistema atual usa formato `nome.cargo`). Registre au
 ## Módulos
 
 ### 1. Cadastros
-- **Clientes** (PF/PJ, CPF/CNPJ validados, endereço com busca por CEP, origem: balcão/Shopee/Magalu/TikTok Shop/WhatsApp).
+- **Clientes** (PF/PJ, CPF/CNPJ validados, endereço com busca por CEP, origem: balcão/Shopee/WhatsApp).
 - **Produtos acabados** com variações (tamanho, espessura, cor, acabamento), SKU, preço por canal, descrição, fotos, NCM/CFOP/CEST, dimensões e peso para frete, **prazo de produção (dias)**.
 - **Matérias-primas/insumos** (chapa de acrílico, papel sulfite 75g, vinil, tinta, etc.) com unidade de medida e custo.
 - **Ficha técnica (BOM)**: cada produto acabado consome quantidades de insumos. Ex.: 10 modelos de bloco de notas consomem o mesmo papel sulfite 75g.
@@ -127,7 +127,7 @@ Login por usuário/senha (o sistema atual usa formato `nome.cargo`). Registre au
   - Pedidos com prazo de postagem vencendo hoje/atrasados
   - Artes aguardando aprovação do cliente
   - Faturamento do dia/semana/mês e meta
-  - Vendas por canal (Shopee, Magalu, TikTok Shop, balcão)
+  - Vendas por canal (Shopee, balcão, WhatsApp)
   - Estoque crítico de insumos
 - Valores financeiros podem ser ocultados por configuração.
 
@@ -135,7 +135,7 @@ Login por usuário/senha (o sistema atual usa formato `nome.cargo`). Registre au
 
 ### Arquitetura (escalabilidade é requisito)
 - Criar uma camada de **adapters**: uma interface comum `MarketplaceAdapter` (produtos, estoque, preços, pedidos, logística, NF-e, mensagens, avaliações) e uma implementação por canal.
-- **Shopee primeiro** (Shopee Open Platform API v2). Deixar a estrutura pronta para **Magalu** e **TikTok Shop** sem alterar o núcleo do sistema.
+- **Somente Shopee** (Shopee Open Platform API v2). Magalu e TikTok Shop foram descartados pelo cliente em 2026-10-11.
 - Suporte a **várias lojas** por marketplace.
 - Tokens OAuth por loja armazenados criptografados, com renovação automática.
 - Webhooks/push recebidos em Route Handlers com validação de assinatura; processamento em **fila** com retentativa, idempotência e log de cada chamada.
@@ -196,8 +196,7 @@ Login por usuário/senha (o sistema atual usa formato `nome.cargo`). Registre au
 4. **Dashboard TV + Financeiro básico**.
 5. **Integração Shopee**: produtos, estoque, pedidos, etiquetas, logística.
 6. **NF-e automática** + reforma tributária.
-7. **Marketing Shopee** (boost automático, respostas com IA).
-8. **Magalu e TikTok Shop** usando a mesma camada de adapters.
+7. **Marketing Shopee** (boost automático, respostas com IA).
 
 ## Como trabalhar
 

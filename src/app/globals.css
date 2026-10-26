@@ -1,0 +1,217 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-brand-header: var(--brand-header);
+  --color-brand-header-foreground: var(--brand-header-foreground);
+  --color-brand-header-muted: var(--brand-header-muted);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-sky: var(--brand-sky);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-lime: var(--brand-lime);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-channel-shopee: var(--channel-shopee);
+  --color-channel-whatsapp: var(--channel-whatsapp);
+  --color-channel-balcao: var(--channel-balcao);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * Paleta da GraphicX (plataforma SaaS para gráficas).
+ * Cor de ação: roxo no tema claro e azul-claro no tema escuro (a mesma família da logo GX).
+ * Base: azul-marinho, verde-azulado, azul-céu, roxo, verde-limão e laranja (alertas).
+ * Pares texto/fundo conferidos para contraste AA: roxo #7c3aed com texto branco (5,7:1);
+ * azul-claro #42a5f5 com texto escuro (> 7:1).
+ */
+:root {
+  --background: #f4f7fb;
+  --foreground: #13214f;
+  --card: #ffffff;
+  --card-foreground: #13214f;
+  --popover: #ffffff;
+  --popover-foreground: #13214f;
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --secondary: #e3f3f5;
+  --secondary-foreground: #0b5f68;
+  --muted: #edf1f7;
+  --muted-foreground: #52607a;
+  --accent: #f1eaff;
+  --accent-foreground: #5b21b6;
+  --destructive: #c0262d;
+  --border: #dde4ee;
+  --input: #7f8ea4; /* borda de campos: 3:1 sobre branco e sobre o fundo (AA 1.4.11) */
+  --ring: #0e7c86;
+  --radius: 0.8rem;
+
+  /* Marca */
+  --brand-orange: #f47b13;
+  --brand-navy: #14287a;
+  --brand-teal: #0e7c86;
+  --brand-sky: #42a5f5;
+  --brand-purple: #7c3aed;
+  --brand-lime: #a3c13a;
+  --brand-header: #ffffff;
+  /* Gradiente da logo GX (no escuro termina num azul mais claro para não sumir no fundo) */
+  --logo-from: #8b5cf6;
+  --logo-to: #14287a;
+  --brand-header-foreground: #14287a;
+  --brand-header-muted: #52607a;
+
+  /* Estados — fundos tingidos no estilo dos cards de KPI */
+  --success: #3f6a0a;
+  --success-soft: #eef6dc;
+  --warning: #b45309;
+  --warning-soft: #fff3e6;
+  --info: #6d28d9;
+  --info-soft: #f1ebfd;
+
+  /* Canais de venda */
+  --channel-shopee: #d9411f;
+  --channel-whatsapp: #15803d;
+  --channel-balcao: #0e7c86;
+
+  --chart-1: #7c3aed;
+  --chart-2: #0e7c86;
+  --chart-3: #42a5f5;
+  --chart-4: #f47b13;
+  --chart-5: #a3c13a;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #13214f;
+  --sidebar-primary: #7c3aed;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1eaff;
+  --sidebar-accent-foreground: #5b21b6;
+  --sidebar-border: #dde4ee;
+  --sidebar-ring: #0e7c86;
+}
+
+/* Modo escuro: fundo preto e cards grafite (como o calendário do print), laranja vivo nas ações. */
+.dark {
+  --background: #000000;
+  --foreground: #f5f5f5;
+  --card: #121212;
+  --card-foreground: #f5f5f5;
+  --popover: #161616;
+  --popover-foreground: #f5f5f5;
+  --primary: #42a5f5;
+  --primary-foreground: #03111f;
+  --secondary: #0b3238;
+  --secondary-foreground: #a5e8ee;
+  --muted: #1c1c1c;
+  --muted-foreground: #a8a8a8;
+  --accent: #0b2236;
+  --accent-foreground: #9fd3ff;
+  --destructive: #f87171;
+  --border: #2a2a2a;
+  --input: #6b6b6b;
+  --ring: #38c5d1;
+
+  --brand-orange: #f58a2e;
+  --brand-navy: #8fa6ff;
+  --brand-teal: #38c5d1;
+  --brand-sky: #60b4f7;
+  --brand-purple: #a78bfa;
+  --brand-lime: #b5d34a;
+  --brand-header: #0a0a0a;
+  --logo-from: #a78bfa;
+  --logo-to: #5b7cf0;
+  --brand-header-foreground: #f5f5f5;
+  --brand-header-muted: #a8a8a8;
+
+  --success: #b5d34a;
+  --success-soft: #1c260b;
+  --warning: #fbbf24;
+  --warning-soft: #3a2a0c;
+  --info: #c4b5fd;
+  --info-soft: #241a45;
+
+  --channel-shopee: #ff7a5c;
+  --channel-whatsapp: #4ade80;
+  --channel-balcao: #38c5d1;
+
+  --chart-1: #42a5f5;
+  --chart-2: #38c5d1;
+  --chart-3: #f58a2e;
+  --chart-4: #a78bfa;
+  --chart-5: #b5d34a;
+
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #f5f5f5;
+  --sidebar-primary: #42a5f5;
+  --sidebar-primary-foreground: #03111f;
+  --sidebar-accent: #0b2236;
+  --sidebar-accent-foreground: #9fd3ff;
+  --sidebar-border: #2a2a2a;
+  --sidebar-ring: #38c5d1;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* Respeita a barra de gestos do iPhone/Android na navegação inferior */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

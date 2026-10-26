@@ -1,0 +1,3 @@
+-- Seed do ambiente local (supabase db reset).
+-- Não coloque usuários reais nem dados de clientes aqui: este repositório é público.
+-- O primeiro administrador é criado com `npm run admin:criar` (veja o README).
