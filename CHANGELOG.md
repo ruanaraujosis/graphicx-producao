@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.0.2] - 2026-10-26
+
+### Alterado
+
+- A interface ocupa a tela inteira no computador (sem a largura máxima centralizada).
+
 ## [1.0.1] - 2026-10-26
 
 ### Corrigido
