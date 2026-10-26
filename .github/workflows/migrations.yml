@@ -32,7 +32,7 @@ jobs:
             echo "::warning::Secrets do Supabase não configurados para este ambiente; migrations não aplicadas."
             echo "SKIP=1" >> "$GITHUB_ENV"
           fi
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         if: env.SKIP != '1'
         with:
           version: 2.120.0
