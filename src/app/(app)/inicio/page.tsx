@@ -516,7 +516,6 @@ async function TeamRanking() {
       showSales={showSales}
       showMoney={showMoney}
       showProduction={showProduction}
-      canEditCommission={showMoney && can(perms, "financeiro.gerenciar")}
     />
   );
 }

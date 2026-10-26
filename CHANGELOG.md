@@ -12,7 +12,7 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ### Adicionado
 
-- **Comissão por vendedor:** percentual sobre as vendas, definido no próprio ranking por quem gerencia o financeiro (tabela `seller_commissions` com RLS; cada pessoa só lê a própria).
+- **Comissão por colaborador:** percentual próprio de cada pessoa sobre as vendas que ela lança, definido no cadastro da equipe (Configurações → Equipe, coluna Comissão) por quem gerencia o financeiro. Tabela `seller_commissions` com RLS: quem vê o financeiro lê todas; cada pessoa só lê a própria. O ranking do Início usa esse percentual.
 
 ## [1.0.2] - 2026-10-26
 

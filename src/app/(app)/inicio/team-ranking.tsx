@@ -1,12 +1,9 @@
 "use client";
 
-import { ArrowDown, Pencil, Trophy } from "lucide-react";
+import { ArrowDown, Trophy } from "lucide-react";
 import { cn } from "cn";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { EntityFormDialog } from "@/components/kit/entity-form";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -18,8 +15,6 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import type { MemberStats } from "@/lib/orders/ranking";
-import { setCommission } from "./actions";
-import { commissionSchema } from "./schema";
 
 export type RankingPeriod = { key: string; label: string; rows: MemberStats[] };
 
@@ -75,20 +70,16 @@ export function TeamRankingTable({
   showSales,
   showMoney,
   showProduction,
-  canEditCommission,
 }: {
   periods: RankingPeriod[];
   showSales: boolean;
   showMoney: boolean;
   showProduction: boolean;
-  canEditCommission: boolean;
 }) {
-  const router = useRouter();
   const [periodKey, setPeriodKey] = useState(periods[1]?.key ?? periods[0]?.key);
   const [sortKey, setSortKey] = useState<SortKey>(
     showMoney ? "sales" : showSales ? "orders" : "produced",
   );
-  const [editing, setEditing] = useState<MemberStats | null>(null);
 
   const period = periods.find((p) => p.key === periodKey) ?? periods[0];
   const rows = [...(period?.rows ?? [])].sort(
@@ -112,17 +103,6 @@ export function TeamRankingTable({
           {row.commissionRate === null ? "Sem comissão" : percent(row.commissionRate)}
         </p>
       </div>
-      {canEditCommission && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-11 md:size-8"
-          aria-label={`Definir comissão de ${row.name}`}
-          onClick={() => setEditing(row)}
-        >
-          <Pencil />
-        </Button>
-      )}
     </div>
   );
 
@@ -262,37 +242,9 @@ export function TeamRankingTable({
       <p className="text-xs text-muted-foreground">
         Vendas: pedidos confirmados que a pessoa lançou (os da Shopee não contam). Produzidos:
         pedidos que a pessoa levou à Expedição.
-        {showMoney && " Comissão: percentual sobre as vendas do período."}
+        {showMoney &&
+          " Comissão: percentual de cada colaborador (definido em Configurações → Equipe) sobre as vendas do período."}
       </p>
-
-      {editing && (
-        <EntityFormDialog
-          key={editing.userId}
-          open
-          onOpenChange={(open) => !open && setEditing(null)}
-          title={`Comissão de ${editing.name}`}
-          description="Percentual sobre as vendas que a pessoa lança. Deixe vazio para não pagar comissão."
-          schema={commissionSchema}
-          defaultValues={{
-            rate:
-              editing.commissionRate === null ? "" : editing.commissionRate.toLocaleString("pt-BR"),
-          }}
-          fields={[
-            {
-              name: "rate",
-              label: "Comissão (%)",
-              type: "number",
-              inputMode: "decimal",
-              placeholder: "Ex.: 5",
-            },
-          ]}
-          action={(values) => setCommission(editing.userId, values)}
-          onSuccess={() => {
-            setEditing(null);
-            router.refresh();
-          }}
-        />
-      )}
     </section>
   );
 }
