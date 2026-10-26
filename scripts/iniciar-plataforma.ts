@@ -6,6 +6,9 @@
  * Lê do .env.local: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY, ORG_NAME, ORG_SLUG,
  * ADMIN_FULL_NAME, ADMIN_USERNAME, ADMIN_EMAIL (opcional) e ADMIN_PASSWORD.
  * Pode rodar de novo sem duplicar nada. Depois, apague ADMIN_PASSWORD do .env.local.
+ *
+ * Com --so-superadmin: cria só a pessoa SuperAdmin, sem gráfica (ORG_* não são lidos).
+ * As gráficas são criadas depois pela Plataforma.
  */
 import { createClient } from "@supabase/supabase-js";
 import { slugSchema } from "../src/lib/auth/organization";
@@ -27,10 +30,9 @@ function required(name: string) {
 }
 
 async function main() {
+  const onlySuperAdmin = process.argv.includes("--so-superadmin");
   const url = required("NEXT_PUBLIC_SUPABASE_URL");
   const secretKey = required("SUPABASE_SECRET_KEY");
-  const orgName = required("ORG_NAME");
-  const orgSlug = slugSchema.parse(required("ORG_SLUG"));
   const fullName = required("ADMIN_FULL_NAME");
   const username = usernameSchema.parse(required("ADMIN_USERNAME"));
   const rawEmail = process.env.ADMIN_EMAIL?.trim();
@@ -41,22 +43,7 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // 1. Gráfica
-  let { data: org } = await db.from("organizations").select("id").eq("slug", orgSlug).maybeSingle();
-  if (!org) {
-    const created = await db
-      .from("organizations")
-      .insert({ name: orgName, slug: orgSlug })
-      .select("id")
-      .single();
-    if (created.error) throw created.error;
-    org = created.data;
-    console.log(`✔ Gráfica "${orgName}" (${orgSlug}) criada.`);
-  } else {
-    console.log(`• Gráfica "${orgSlug}" já existia.`);
-  }
-
-  // 2. Pessoa
+  // 1. Pessoa
   const { data: existing } = await db
     .from("profiles")
     .select("id")
@@ -90,7 +77,37 @@ async function main() {
     console.log(`✔ Pessoa "${username}" criada.`);
   }
 
-  // 3. Admin da gráfica + SuperAdmin da plataforma
+  // 2. SuperAdmin da plataforma
+  const platform = await db.from("platform_admins").upsert({ user_id: userId });
+  if (platform.error) throw platform.error;
+
+  if (onlySuperAdmin) {
+    console.log(`✔ "${username}" é SuperAdmin da plataforma (sem gráfica).`);
+    console.log("  Crie as gráficas em Plataforma → Nova gráfica.");
+    console.log(
+      "  No primeiro login o sistema vai pedir para configurar o app autenticador (MFA).",
+    );
+    console.log("  Agora apague ADMIN_PASSWORD do arquivo de ambiente.");
+    return;
+  }
+
+  // 3. Gráfica e admin dela
+  const orgName = required("ORG_NAME");
+  const orgSlug = slugSchema.parse(required("ORG_SLUG"));
+  let { data: org } = await db.from("organizations").select("id").eq("slug", orgSlug).maybeSingle();
+  if (!org) {
+    const created = await db
+      .from("organizations")
+      .insert({ name: orgName, slug: orgSlug })
+      .select("id")
+      .single();
+    if (created.error) throw created.error;
+    org = created.data;
+    console.log(`✔ Gráfica "${orgName}" (${orgSlug}) criada.`);
+  } else {
+    console.log(`• Gráfica "${orgSlug}" já existia.`);
+  }
+
   const { data: adminRole, error: roleError } = await db
     .from("organization_roles")
     .select("id")
@@ -102,8 +119,6 @@ async function main() {
     .from("organization_members")
     .upsert({ organization_id: org.id, user_id: userId, role_id: adminRole.id, active: true });
   if (member.error) throw member.error;
-  const platform = await db.from("platform_admins").upsert({ user_id: userId });
-  if (platform.error) throw platform.error;
 
   console.log(`✔ "${username}" é admin de ${orgName} e SuperAdmin da plataforma.`);
   console.log("  No primeiro login o sistema vai pedir para configurar o app autenticador (MFA).");
