@@ -40,6 +40,7 @@ test.describe("recuperação de senha", () => {
   test("link inválido volta ao login com aviso", async ({ page }) => {
     await page.goto("/auth/confirm?next=/redefinir-senha");
     await expect(page).toHaveURL(/\/login\?erro=link-invalido/);
-    await expect(page.getByRole("alert")).toContainText("O link expirou");
+    // Pelo texto: o Next.js também põe um anunciador de rota com role="alert" na página.
+    await expect(page.getByRole("alert").filter({ hasText: "O link expirou" })).toBeVisible();
   });
 });
