@@ -8,7 +8,7 @@ export const LEGAL = {
   /** Data da última alteração (AAAA-MM-DD). */
   updatedAt: "2026-11-02",
   /** Nome de quem opera o GraphicX (razão social, quando houver CNPJ). */
-  operatorName: null as string | null,
+  operatorName: "Ruan Pablo Araujo Silva" as string | null,
   /** CNPJ formatado. Sem CNPJ (pessoa física), fica `null` e o trecho some dos textos. */
   operatorDocument: null as string | null,
   /** E-mail para privacidade, pedidos de titulares e contato com o encarregado. */

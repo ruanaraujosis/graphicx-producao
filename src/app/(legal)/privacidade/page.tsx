@@ -204,6 +204,16 @@ const sections: LegalSection[] = [
           {LEGAL.deletionDays} dias, inclusive os backups.
         </li>
         <li>Registros de acesso: 6 meses, como exige o Marco Civil da Internet.</li>
+        <li>
+          Nome e contato de compradores da Shopee: 5 anos, contados a partir de 1º de janeiro do ano
+          seguinte à entrega ou ao cancelamento (prazos fiscais do Código Tributário Nacional e de
+          reclamação do Código de Defesa do Consumidor). Depois disso, são anonimizados
+          automaticamente, e o pedido e os valores continuam registrados.
+        </li>
+        <li>
+          Clientes cadastrados pela gráfica: enquanto ela precisar deles. A gráfica pode exportar ou
+          anonimizar os dados de um cliente a qualquer momento.
+        </li>
         <li>Dados que a lei mande guardar por mais tempo, pelo prazo exigido.</li>
       </ul>
     ),
