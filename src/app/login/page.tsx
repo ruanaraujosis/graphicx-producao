@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Logo, LogoMark } from "@/components/brand/logo";
+import { LegalLinks } from "@/components/legal/legal-doc";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Entrar" };
@@ -51,6 +52,7 @@ export default function LoginPage() {
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Entra só com usuário? Peça ao admin da sua gráfica para redefinir a senha.
           </p>
+          <LegalLinks className="mt-4 text-xs text-muted-foreground" />
         </div>
       </main>
     </div>

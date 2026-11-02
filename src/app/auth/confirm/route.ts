@@ -1,5 +1,6 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { recordAccess } from "@/lib/auth/access-log";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,13 +16,15 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
 
   const supabase = await createClient();
-  let ok = false;
+  let userId: string | undefined;
 
   if (code) {
-    ok = !(await supabase.auth.exchangeCodeForSession(code)).error;
+    userId = (await supabase.auth.exchangeCodeForSession(code)).data.user?.id;
   } else if (tokenHash && type) {
-    ok = !(await supabase.auth.verifyOtp({ type, token_hash: tokenHash })).error;
+    userId = (await supabase.auth.verifyOtp({ type, token_hash: tokenHash })).data.user?.id;
   }
+  const ok = Boolean(userId);
+  if (userId) await recordAccess(userId, "link");
 
   const target = new URL(ok ? next : "/login?erro=link-invalido", request.url);
   return NextResponse.redirect(target);

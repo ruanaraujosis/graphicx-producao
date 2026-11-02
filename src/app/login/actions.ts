@@ -6,6 +6,7 @@ import { parseLoginIdentifier, usernameToEmail } from "@/lib/auth/username";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/auth/safe-next";
+import { recordAccess } from "@/lib/auth/access-log";
 
 const loginSchema = z.object({
   identifier: z.string().trim().min(1).max(254),
@@ -38,7 +39,7 @@ export async function login(input: z.input<typeof loginSchema>): Promise<LoginSt
     identifier.kind === "email" ? identifier.value : await emailForUsername(identifier.value);
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password: parsed.data.password,
   });
@@ -50,6 +51,8 @@ export async function login(input: z.input<typeof loginSchema>): Promise<LoginSt
     // Mesma mensagem para usuário inexistente e senha errada: não revela quem tem conta.
     return { error: INVALID };
   }
+
+  await recordAccess(data.user.id, "login");
 
   // A DAL decide o próximo passo: MFA, escolha de gráfica ou direto para o painel.
   redirect(safeNextPath(parsed.data.next));
