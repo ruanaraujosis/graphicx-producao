@@ -1521,6 +1521,7 @@ export type Database = {
           state: string | null;
           notes: string | null;
           active: boolean;
+          anonymized_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1544,6 +1545,7 @@ export type Database = {
           state?: string | null;
           notes?: string | null;
           active?: boolean;
+          anonymized_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1567,6 +1569,7 @@ export type Database = {
           state?: string | null;
           notes?: string | null;
           active?: boolean;
+          anonymized_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2568,6 +2571,10 @@ export type Database = {
       };
     };
     Functions: {
+      anonymize_customer: {
+        Args: { p_customer: string }
+        Returns: undefined
+      }
       marketplace_save_tokens: {
         Args: { p_shop: string; p_access: string; p_refresh: string; p_access_expires: string; p_refresh_expires: string }
         Returns: undefined

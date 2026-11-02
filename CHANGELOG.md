@@ -4,6 +4,14 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+### Adicionado
+
+- **LGPD no cadastro de clientes:** quem gerencia os cadastros pode **exportar os dados** de um cliente (arquivo JSON com cadastro, pedidos, itens e aprovações de arte) e **anonimizar** o cliente quando ele pedir a exclusão. A anonimização apaga nome, CPF/CNPJ, contatos, endereço e observações do cadastro, dos pedidos, do a receber e do histórico de alterações, e mantém os pedidos e valores para os relatórios. Fica bloqueada enquanto houver pedido em andamento. Função `anonymize_customer` com teste pgTAP.
+
+### Alterado
+
+- **Financeiro:** trocar o nome do cliente de um pedido atualiza só o nome no a receber, sem recalcular valores, taxa ou vencimento (também em contas já recebidas).
+
 ## [1.1.0] - 2026-10-26
 
 ### Alterado

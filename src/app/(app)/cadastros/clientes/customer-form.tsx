@@ -27,6 +27,7 @@ export type CustomerRow = {
   state: string | null;
   notes: string | null;
   active: boolean;
+  anonymized_at?: string | null;
 };
 
 const isPj = (v: Record<string, unknown>) => v.person_type === "pj";
