@@ -4,10 +4,15 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.2.0] - 2026-11-02
+
 ### Adicionado
 
+- **Política de Privacidade e Termos de Uso** (`/privacidade` e `/termos`): páginas públicas, sem login, conforme a LGPD. Explicam os papéis (gráfica controladora, GraphicX operador), os dados tratados, as bases legais, os cookies (só essenciais), os fornecedores, a retenção e os direitos dos titulares. Os Termos incluem a política de reembolso. Links no login, no link de arte do cliente e no menu do usuário. Dados do operador ficam em `src/lib/legal.ts`.
+- **Registros de acesso** (Marco Civil, art. 15): cada entrada no sistema (login e link de recuperação de senha) grava data, hora, IP e navegador na tabela `access_logs`, fechada para os clientes e apagada automaticamente após 6 meses (pg_cron).
+- **Teste de cobertura do RLS:** garante que toda tabela do banco tem RLS e políticas, que as views aplicam o RLS de quem consulta e que o acesso anônimo não lê nenhuma tabela.
 - **LGPD no cadastro de clientes:** quem gerencia os cadastros pode **exportar os dados** de um cliente (arquivo JSON com cadastro, pedidos, itens e aprovações de arte) e **anonimizar** o cliente quando ele pedir a exclusão. A anonimização apaga nome, CPF/CNPJ, contatos, endereço e observações do cadastro, dos pedidos, do a receber e do histórico de alterações, e mantém os pedidos e valores para os relatórios. Fica bloqueada enquanto houver pedido em andamento. Função `anonymize_customer` com teste pgTAP.
-- **Retenção dos dados de compradores da Shopee:** nome, telefone e identificador do comprador ficam 5 anos, contados de 1º de janeiro do ano seguinte à entrega ou ao cancelamento (prazos do CTN e do CDC). Depois disso, uma rotina diária (pg_cron, 3h30) anonimiza esses dados nos pedidos, no a receber, nas avaliações e no histórico. Pedido e valores continuam.
+- **Retenção dos dados de compradores da Shopee:** nome, telefone e identificador do comprador ficam 5 anos, contados de 1º de janeiro do ano seguinte à entrega ou ao cancelamento (CTN art. 173, CDC art. 27 e Código Civil art. 206, § 5º, I). Depois disso, uma rotina diária (pg_cron, 3h30) anonimiza esses dados nos pedidos, no a receber, nas avaliações e no histórico. Pedido e valores continuam.
 
 ### Alterado
 

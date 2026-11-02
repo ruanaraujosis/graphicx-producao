@@ -7,6 +7,33 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          id: number;
+          user_id: string;
+          event: string;
+          ip: unknown;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: never;
+          user_id: string;
+          event: string;
+          ip?: unknown;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: never;
+          user_id?: string;
+          event?: string;
+          ip?: unknown;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       marketplace_logs: {
         Row: {
           created_at: string

@@ -8,6 +8,9 @@ const PUBLIC_PATHS = [
   "/login",
   "/esqueci-senha",
   "/auth/confirm",
+  // Textos legais.
+  "/privacidade",
+  "/termos",
   // Link do cliente para enviar arte e aprovar a prova (token no caminho).
   "/a",
   // Painel da TV (token de dispositivo no caminho, só leitura) e a tela de conectar com código.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { CheckCircle2, Clock, FileText, Link2Off, XCircle } from "lucide-react";
 import { Suspense } from "react";
+import { LegalLinks } from "@/components/legal/legal-doc";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ART_BUCKET } from "@/lib/art/files";
 import { formatDateTime } from "@/lib/format";
@@ -32,6 +33,7 @@ export default function ArtePublicaPage({ params }: PageProps<"/a/[token]">) {
       <p className="mt-auto pt-6 text-center text-xs text-muted-foreground">
         Link seguro gerado pela gráfica · GraphicX
       </p>
+      <LegalLinks className="text-xs text-muted-foreground" />
     </main>
   );
 }
