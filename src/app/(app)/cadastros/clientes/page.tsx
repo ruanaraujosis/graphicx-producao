@@ -10,6 +10,7 @@ import { formatDocument, formatPhone } from "@/lib/documents";
 import { ilikeTerm, parseListParams } from "@/lib/list-params";
 import { createClient } from "@/lib/supabase/server";
 import { CustomerFormDialog, type CustomerRow } from "./customer-form";
+import { CustomerPrivacyActions } from "./customer-privacy";
 
 export const metadata = { title: "Clientes" };
 
@@ -29,13 +30,15 @@ export default function ClientesPage({ searchParams }: PageProps<"/cadastros/cli
 async function Clientes({ searchParams }: { searchParams: Params }) {
   const { membership } = await requireOrg(["cadastros.ver", "pedidos.ver"]);
   const canManage = can(membership.permissions, ["cadastros.gerenciar", "pedidos.gerenciar"]);
+  // Pedidos do titular (LGPD) ficam com quem gerencia os cadastros.
+  const canPrivacy = can(membership.permissions, "cadastros.gerenciar");
   const { q, page, from, to } = parseListParams(await searchParams);
 
   const supabase = await createClient();
   let query = supabase
     .from("customers")
     .select(
-      "id, person_type, name, legal_name, document, email, phone, whatsapp, origin, cep, street, number, complement, district, city, state, notes, active",
+      "id, person_type, name, legal_name, document, email, phone, whatsapp, origin, cep, street, number, complement, district, city, state, notes, active, anonymized_at",
       { count: "exact" },
     )
     .eq("organization_id", membership.organizationId)
@@ -78,7 +81,11 @@ async function Clientes({ searchParams }: { searchParams: Params }) {
               <ChannelBadge channel={r.origin} />
               <Pill>{r.person_type === "pj" ? "PJ" : "PF"}</Pill>
               {r.city && <Pill>{`${r.city}/${r.state ?? ""}`}</Pill>}
-              {!r.active && <Pill tone="warning">Inativo</Pill>}
+              {r.anonymized_at ? (
+                <Pill>Anonimizado</Pill>
+              ) : (
+                !r.active && <Pill tone="warning">Inativo</Pill>
+              )}
             </>
           ),
         }}
@@ -101,10 +108,26 @@ async function Clientes({ searchParams }: { searchParams: Params }) {
           {
             header: "Status",
             cell: (r) =>
-              r.active ? <Pill tone="success">Ativo</Pill> : <Pill tone="warning">Inativo</Pill>,
+              r.anonymized_at ? (
+                <Pill>Anonimizado</Pill>
+              ) : r.active ? (
+                <Pill tone="success">Ativo</Pill>
+              ) : (
+                <Pill tone="warning">Inativo</Pill>
+              ),
           },
         ]}
-        actions={canManage ? (r) => <CustomerFormDialog customer={r} /> : undefined}
+        actions={
+          canManage
+            ? (r) =>
+                r.anonymized_at ? null : (
+                  <div className="flex justify-end gap-1">
+                    <CustomerFormDialog customer={r} />
+                    {canPrivacy && <CustomerPrivacyActions customer={r} />}
+                  </div>
+                )
+            : undefined
+        }
       />
       <Pagination basePath="/cadastros/clientes" page={page} total={count ?? 0} q={q} />
     </>
