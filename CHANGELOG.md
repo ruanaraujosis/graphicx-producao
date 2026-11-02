@@ -7,6 +7,7 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 ### Adicionado
 
 - **LGPD no cadastro de clientes:** quem gerencia os cadastros pode **exportar os dados** de um cliente (arquivo JSON com cadastro, pedidos, itens e aprovações de arte) e **anonimizar** o cliente quando ele pedir a exclusão. A anonimização apaga nome, CPF/CNPJ, contatos, endereço e observações do cadastro, dos pedidos, do a receber e do histórico de alterações, e mantém os pedidos e valores para os relatórios. Fica bloqueada enquanto houver pedido em andamento. Função `anonymize_customer` com teste pgTAP.
+- **Retenção dos dados de compradores da Shopee:** nome, telefone e identificador do comprador ficam 5 anos, contados de 1º de janeiro do ano seguinte à entrega ou ao cancelamento (prazos do CTN e do CDC). Depois disso, uma rotina diária (pg_cron, 3h30) anonimiza esses dados nos pedidos, no a receber, nas avaliações e no histórico. Pedido e valores continuam.
 
 ### Alterado
 
