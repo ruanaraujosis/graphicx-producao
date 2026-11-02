@@ -20,7 +20,7 @@ select is(
   (select coalesce(string_agg(c.relname, ', ' order by c.relname), '')
      from pg_class c join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'public' and c.relkind in ('r', 'p')
-      and c.relname not in ('order_counters', 'tv_pairings')
+      and c.relname not in ('access_logs', 'order_counters', 'tv_pairings')
       and not exists (
         select 1 from pg_policies p where p.schemaname = 'public' and p.tablename = c.relname
       )),

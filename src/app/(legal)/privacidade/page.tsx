@@ -203,18 +203,31 @@ const sections: LegalSection[] = [
           Depois do encerramento, a gráfica pode exportar seus dados, e excluímos tudo em até{" "}
           {LEGAL.deletionDays} dias, inclusive os backups.
         </li>
-        <li>Registros de acesso: 6 meses, como exige o Marco Civil da Internet.</li>
         <li>
-          Nome e contato de compradores da Shopee: 5 anos, contados a partir de 1º de janeiro do ano
-          seguinte à entrega ou ao cancelamento (prazos fiscais do Código Tributário Nacional e de
-          reclamação do Código de Defesa do Consumidor). Depois disso, são anonimizados
+          <strong>Registros de acesso</strong> (data, hora, IP e navegador de cada entrada no
+          sistema): 6 meses, sob sigilo, como prevê o art. 15 do Marco Civil da Internet (Lei
+          12.965/2014). Depois disso, são apagados automaticamente.
+        </li>
+        <li>
+          <strong>Nome, telefone e identificação de compradores da Shopee:</strong> 5 anos, contados
+          de 1º de janeiro do ano seguinte à entrega ou ao cancelamento do pedido. O prazo segue o
+          art. 173 do Código Tributário Nacional, o art. 27 do Código de Defesa do Consumidor e o
+          art. 206, § 5º, I, do Código Civil. Depois disso, esses dados são anonimizados
           automaticamente, e o pedido e os valores continuam registrados.
         </li>
         <li>
-          Clientes cadastrados pela gráfica: enquanto ela precisar deles. A gráfica pode exportar ou
-          anonimizar os dados de um cliente a qualquer momento.
+          <strong>Clientes cadastrados pela gráfica:</strong> enquanto ela precisar deles, como
+          controladora. A gráfica pode exportar ou anonimizar os dados de um cliente a qualquer
+          momento.
         </li>
-        <li>Dados que a lei mande guardar por mais tempo, pelo prazo exigido.</li>
+        <li>
+          <strong>Registro de alterações:</strong> enquanto a gráfica mantiver o contrato. Quando um
+          cliente é anonimizado, os dados pessoais dele também saem desse registro.
+        </li>
+        <li>
+          Dados que a lei mande guardar por mais tempo ficam pelo prazo exigido, como permite o art.
+          16, I, da LGPD.
+        </li>
       </ul>
     ),
   },
