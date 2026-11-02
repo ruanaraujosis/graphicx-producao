@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowLeftRight, Building2, LogOut, Monitor, Moon, Sun, UserRound } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Building2,
+  LogOut,
+  Monitor,
+  Moon,
+  ShieldCheck,
+  Sun,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -107,6 +116,13 @@ export function UserMenu({
             </DropdownMenuSubContent>
           </DropdownMenuSub>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/privacidade">
+            <ShieldCheck />
+            Privacidade e termos
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onSelect={() => logout()}>
           <LogOut />
