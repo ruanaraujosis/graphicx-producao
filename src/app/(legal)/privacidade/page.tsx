@@ -17,9 +17,9 @@ const sections: LegalSection[] = [
         <p>
           O GraphicX é um sistema de gestão para gráficas, operado por{" "}
           <strong>
-            <Fill value={LEGAL.operatorName} label="razão social" />
+            <Fill value={LEGAL.operatorName} label="nome do responsável" />
           </strong>
-          , inscrita no CNPJ <Fill value={LEGAL.operatorDocument} label="CNPJ" />.
+          {LEGAL.operatorDocument && <>, inscrito no CNPJ {LEGAL.operatorDocument}</>}.
         </p>
         <p>Pela Lei Geral de Proteção de Dados (LGPD), os papéis são:</p>
         <ul>

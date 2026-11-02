@@ -7,14 +7,14 @@ export const LEGAL = {
   version: "1.0",
   /** Data da última alteração (AAAA-MM-DD). */
   updatedAt: "2026-11-02",
-  /** Razão social de quem opera o GraphicX. */
+  /** Nome de quem opera o GraphicX (razão social, quando houver CNPJ). */
   operatorName: null as string | null,
-  /** CNPJ (ou CPF, se pessoa física), já formatado. */
+  /** CNPJ formatado. Sem CNPJ (pessoa física), fica `null` e o trecho some dos textos. */
   operatorDocument: null as string | null,
   /** E-mail para privacidade, pedidos de titulares e contato com o encarregado. */
-  privacyEmail: null as string | null,
+  privacyEmail: "ruan.araujosi27@gmail.com" as string | null,
   /** Comarca do foro (cidade/UF). */
-  forumCity: null as string | null,
+  forumCity: "Luziânia/GO" as string | null,
   /** Dias para excluir os dados de uma gráfica depois do encerramento do contrato. */
   deletionDays: 90,
   /** Cópias automáticas de backup mantidas por gráfica. */

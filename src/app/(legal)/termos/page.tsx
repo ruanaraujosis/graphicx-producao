@@ -16,11 +16,10 @@ const sections: LegalSection[] = [
       <p>
         Estes termos regem o uso do GraphicX, operado por{" "}
         <strong>
-          <Fill value={LEGAL.operatorName} label="razão social" />
-        </strong>{" "}
-        (CNPJ <Fill value={LEGAL.operatorDocument} label="CNPJ" />
-        ). Ao contratar ou usar o sistema, a gráfica e seus usuários concordam com estes termos e
-        com a{" "}
+          <Fill value={LEGAL.operatorName} label="nome do responsável" />
+        </strong>
+        {LEGAL.operatorDocument && <> (CNPJ {LEGAL.operatorDocument})</>}. Ao contratar ou usar o
+        sistema, a gráfica e seus usuários concordam com estes termos e com a{" "}
         <Link href="/privacidade" className="font-medium underline">
           Política de Privacidade
         </Link>
