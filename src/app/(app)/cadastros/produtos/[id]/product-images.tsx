@@ -112,6 +112,9 @@ export function ProductImages({
             accept={TYPES.join(",")}
             multiple
             className="sr-only"
+            // Acionado pelo botão "Adicionar fotos": fora do Tab e da leitura de tela.
+            tabIndex={-1}
+            aria-hidden
             id={`fotos-${productId}`}
             onChange={(e) => upload(e.target.files)}
           />

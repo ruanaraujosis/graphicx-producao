@@ -141,7 +141,7 @@ export function Board({
           {live ? "Ao vivo" : "Conectando…"}
         </span>
         {late > 0 && (
-          <span className="rounded-full bg-destructive px-2.5 py-1 text-xs font-medium text-white">
+          <span className="rounded-full bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground">
             {late} atrasado(s)
           </span>
         )}

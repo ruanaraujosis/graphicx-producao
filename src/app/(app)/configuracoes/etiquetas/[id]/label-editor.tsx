@@ -272,6 +272,8 @@ export function LabelEditor({
           </label>
         </div>
         <div
+          role="application"
+          aria-label="Área da etiqueta. Clique num elemento e use as setas para movê-lo."
           tabIndex={0}
           onKeyDown={onKey}
           onPointerDown={() => setSelectedId(null)}

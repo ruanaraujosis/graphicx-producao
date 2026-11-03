@@ -28,7 +28,7 @@ export function StatusPill({ status, className }: { status: OrderStatus; classNa
 }
 
 const RISK_CLASSES: Record<DueRisk, string> = {
-  atrasado: "bg-destructive text-white",
+  atrasado: "bg-destructive text-destructive-foreground",
   hoje: "bg-destructive/10 text-destructive",
   amanha: "bg-warning-soft text-warning",
   ok: "bg-muted text-muted-foreground",
