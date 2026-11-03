@@ -4,6 +4,8 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.4.1] - 2026-11-02
+
 ### Corrigido
 
 - **Acessibilidade (auditoria WCAG 2.1 AA):**
