@@ -1,10 +1,10 @@
--- LGPD: anonimização de clientes. Só quem gerencia cadastros; nada de dado pessoal sobra no
+-- LGPD: anonimização de clientes. Só com a permissão lgpd.gerenciar; nada de dado pessoal sobra no
 -- cadastro, nos pedidos nem na auditoria; pedido em andamento impede.
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(10);
+select plan(12);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000b1', 'admin@lgpd.local'),
@@ -18,7 +18,15 @@ insert into public.organizations (id, slug, name) values
   ('10000000-0000-0000-0000-0000000000b1', 'grafica-lgpd', 'Gráfica LGPD'),
   ('10000000-0000-0000-0000-0000000000b2', 'grafica-lgpd-2', 'Outra LGPD');
 insert into public.organization_roles (id, organization_id, name, permissions) values
-  ('90000000-0000-0000-0000-0000000000b1', '10000000-0000-0000-0000-0000000000b1', 'Vendas', array['pedidos.gerenciar']);
+  ('90000000-0000-0000-0000-0000000000b1', '10000000-0000-0000-0000-0000000000b1', 'Vendas', array['pedidos.gerenciar', 'cadastros.gerenciar']);
+select lives_ok(
+  $$ insert into public.organization_roles (organization_id, name, permissions) values
+     ('10000000-0000-0000-0000-0000000000b1', 'Privacidade', array['cadastros.ver', 'lgpd.gerenciar']) $$,
+  'perfil com a permissão de LGPD é salvo (sem lgpd.ver)');
+select is(
+  (select permissions from public.organization_roles
+    where organization_id = '10000000-0000-0000-0000-0000000000b1' and name = 'Privacidade'),
+  array['cadastros.ver', 'lgpd.gerenciar']::text[], 'gerenciar LGPD não cria uma permissão ver inexistente');
 insert into public.organization_members (organization_id, user_id, role_id)
 select r.organization_id, u.id, r.id
 from (values
@@ -43,7 +51,7 @@ set local "request.jwt.claims" to
 set local role authenticated;
 select throws_ok(
   $$ select public.anonymize_customer('20000000-0000-0000-0000-0000000000b1') $$,
-  '42501', null, 'sem cadastros.gerenciar não anonimiza');
+  '42501', null, 'quem gerencia cadastros, mas não tem LGPD, não anonimiza');
 reset role;
 set local "request.jwt.claims" to
   '{"sub":"00000000-0000-0000-0000-0000000000b3","role":"authenticated","aal":"aal2"}';

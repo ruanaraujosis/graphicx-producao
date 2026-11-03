@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.3.0] - 2026-11-02
+
+### Alterado
+
+- **Permissão própria para LGPD:** exportar e anonimizar clientes passa a exigir a nova permissão **Dados pessoais (LGPD)** (`lgpd.gerenciar`), em vez de "Cadastros: gerenciar". Só o Administrador começa com ela; cada gráfica pode concedê-la a outros perfis em Configurações → Perfis. O banco deixa de criar "ver" automático para módulos que não têm essa ação.
+
 ## [1.2.0] - 2026-11-02
 
 ### Adicionado
