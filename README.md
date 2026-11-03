@@ -164,6 +164,10 @@ A produção usa **um único projeto Supabase** para todas as gráficas: cada li
 
 - **Backup geral:** o plano gratuito do Supabase **não tem backup automático** e pausa o projeto após dias sem uso. Assinar o plano Pro quando as gráficas começarem a usar (backup diário e, opcionalmente, PITR).
 - **Backup por gráfica:** a rotina diária (Vercel Cron em `vercel.json`, 03h de Brasília → `/api/plataforma/backups`, protegida pelo `CRON_SECRET`) gera um JSON compactado com todas as tabelas da gráfica no bucket privado `backups` e guarda os últimos 14 automáticos. O SuperAdmin acompanha e dispara backups em **Plataforma → Backups**, vendo só metadados (data, tamanho, registros) — nunca o conteúdo. Arquivos (fotos, artes) ficam no Storage, na pasta da gráfica; chaves das lojas (Vault) não entram no backup.
+- **Backup criptografado:** com `BACKUP_ENCRYPTION_KEY` na Vercel, cada arquivo sai criptografado com AES-256-GCM (`.json.gz.enc`), amarrado à gráfica e com verificação de integridade (`src/lib/backups/crypto.ts`). O banco guarda só a impressão da chave. Sem a variável, o backup sai só compactado e a tela da Plataforma avisa.
+  - Gerar a chave (no seu terminal, sem colar em chat nem em arquivo versionado): `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
+  - Cadastre na Vercel (Production; uma chave diferente em Preview) e **guarde uma cópia no gerenciador de senhas**: sem ela, nenhum backup abre. Trocar a chave não regrava os backups antigos; mantenha a anterior até eles expirarem (14 dias).
+  - Abrir um backup para restaurar: baixe o arquivo do bucket e rode `npm run backup:abrir -- <arquivo.json.gz.enc>` com a chave no arquivo de ambiente de produção. O resultado tem dados pessoais: fora do repositório e apagado depois.
 
 ## Variáveis de ambiente e segredos
 

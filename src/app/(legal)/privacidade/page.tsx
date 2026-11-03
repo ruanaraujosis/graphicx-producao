@@ -187,8 +187,8 @@ const sections: LegalSection[] = [
         </li>
         <li>Registro de alterações nos dados mais importantes.</li>
         <li>
-          Backup diário de cada gráfica, com as {LEGAL.backupCopies} cópias mais recentes guardadas
-          em armazenamento privado.
+          Backup diário de cada gráfica, criptografado (AES-256), com as {LEGAL.backupCopies} cópias
+          mais recentes guardadas em armazenamento privado.
         </li>
       </ul>
     ),

@@ -1,10 +1,13 @@
 import "server-only";
 import { gzipSync } from "node:zlib";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { backupKeyFromEnv, encryptBackup } from "./crypto";
 
 /**
  * Backup por gráfica: todas as linhas das tabelas com organization_id daquela
- * gráfica, num JSON compactado (gzip) no bucket privado "backups".
+ * gráfica, num JSON compactado (gzip) e criptografado (AES-256-GCM) no bucket
+ * privado "backups". Sem BACKUP_ENCRYPTION_KEY o arquivo sai só compactado e a
+ * Plataforma avisa.
  * Só o servidor chama (rotina com segredo ou SuperAdmin já autorizado).
  */
 
@@ -97,12 +100,16 @@ export async function backupOrganization(
   if (insertError || !record) throw new Error("Não foi possível registrar o backup.");
 
   try {
+    const key = backupKeyFromEnv();
     const file = await buildBackup(db, org);
-    const bytes = gzipSync(Buffer.from(JSON.stringify(file)));
-    const path = `${org}/${file.generated_at.replace(/[:.]/g, "-")}-${kind}.json.gz`;
-    const { error: uploadError } = await db.storage
-      .from(BACKUP_BUCKET)
-      .upload(path, bytes, { contentType: "application/gzip", upsert: false });
+    const packed = gzipSync(Buffer.from(JSON.stringify(file)));
+    const bytes = key ? encryptBackup(packed, org, key) : packed;
+    const stamp = file.generated_at.replace(/[:.]/g, "-");
+    const path = `${org}/${stamp}-${kind}.json.gz${key ? ".enc" : ""}`;
+    const { error: uploadError } = await db.storage.from(BACKUP_BUCKET).upload(path, bytes, {
+      contentType: key ? "application/octet-stream" : "application/gzip",
+      upsert: false,
+    });
     if (uploadError) throw new Error(`Armazenamento: ${uploadError.message}`);
 
     const counts = Object.fromEntries(
@@ -115,6 +122,8 @@ export async function backupOrganization(
         storage_path: path,
         size_bytes: bytes.length,
         row_counts: counts,
+        encrypted: Boolean(key),
+        key_fingerprint: key?.fingerprint ?? null,
         finished_at: new Date().toISOString(),
       })
       .eq("id", record.id);
