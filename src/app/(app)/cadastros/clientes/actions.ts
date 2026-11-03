@@ -45,7 +45,7 @@ export async function saveCustomer(
 
 /** LGPD: remove os dados pessoais do cliente (cadastro, pedidos, a receber e auditoria). */
 export async function anonymizeCustomer(id: string): Promise<ActionResult> {
-  await requireOrg("cadastros.gerenciar");
+  await requireOrg("lgpd.gerenciar");
   const valid = z.uuid().safeParse(id);
   if (!valid.success) return { ok: false, error: "Cliente inválido." };
 
