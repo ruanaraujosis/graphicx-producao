@@ -2,6 +2,7 @@ import "server-only";
 import { gzipSync } from "node:zlib";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { backupKeyFromEnv, encryptBackup } from "./crypto";
+import { offsiteFromEnv, removeOffsite, uploadOffsite } from "./offsite";
 
 /**
  * Backup por gráfica: todas as linhas das tabelas com organization_id daquela
@@ -115,6 +116,7 @@ export async function backupOrganization(
     const counts = Object.fromEntries(
       Object.entries(file.tables).map(([t, rows]) => [t, rows.length]),
     );
+    const offsite = await copyOffsite(path, bytes, Boolean(key));
     await db
       .from("platform_backups")
       .update({
@@ -124,6 +126,8 @@ export async function backupOrganization(
         row_counts: counts,
         encrypted: Boolean(key),
         key_fingerprint: key?.fingerprint ?? null,
+        offsite_status: offsite?.status ?? null,
+        offsite_error: offsite?.error ?? null,
         finished_at: new Date().toISOString(),
       })
       .eq("id", record.id);
@@ -142,7 +146,26 @@ export async function backupOrganization(
   }
 }
 
-/** Mantém só os últimos backups automáticos de cada gráfica. */
+/**
+ * Cópia no Cloudflare R2. Só sai arquivo criptografado; falha aqui não derruba o backup
+ * (a cópia do Supabase já está gravada) e fica registrada para a Plataforma mostrar.
+ */
+async function copyOffsite(path: string, bytes: Buffer, encrypted: boolean) {
+  try {
+    const config = offsiteFromEnv();
+    if (!config) return null;
+    if (!encrypted) {
+      return { status: "erro", error: "Sem criptografia: a cópia externa não foi enviada." };
+    }
+    await uploadOffsite(config, path, bytes);
+    return { status: "copiado", error: null };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Erro desconhecido.";
+    return { status: "erro", error: message.slice(0, 500) };
+  }
+}
+
+/** Mantém só os últimos backups automáticos de cada gráfica (no Supabase e no R2). */
 async function applyRetention(db: Db, org: string) {
   const { data: old } = await db
     .from("platform_backups")
@@ -154,7 +177,15 @@ async function applyRetention(db: Db, org: string) {
     .range(KEEP_AUTOMATIC, KEEP_AUTOMATIC + 100);
   if (!old?.length) return;
   const paths = old.map((b) => b.storage_path).filter((p): p is string => Boolean(p));
-  if (paths.length) await db.storage.from(BACKUP_BUCKET).remove(paths);
+  if (paths.length) {
+    await db.storage.from(BACKUP_BUCKET).remove(paths);
+    try {
+      const offsite = offsiteFromEnv();
+      if (offsite) await removeOffsite(offsite, paths);
+    } catch {
+      // R2 mal configurado: o aviso já aparece no backup; a expiração do bucket limpa depois.
+    }
+  }
   await db
     .from("platform_backups")
     .delete()

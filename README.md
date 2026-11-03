@@ -168,6 +168,10 @@ A produção usa **um único projeto Supabase** para todas as gráficas: cada li
   - Gerar a chave (no seu terminal, sem colar em chat nem em arquivo versionado): `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
   - Cadastre na Vercel (Production; uma chave diferente em Preview) e **guarde uma cópia no gerenciador de senhas**: sem ela, nenhum backup abre. Trocar a chave não regrava os backups antigos; mantenha a anterior até eles expirarem (14 dias).
   - Abrir um backup para restaurar: baixe o arquivo do bucket e rode `npm run backup:abrir -- <arquivo.json.gz.enc>` com a chave no arquivo de ambiente de produção. O resultado tem dados pessoais: fora do repositório e apagado depois.
+- **Cópia externa (Cloudflare R2):** cada backup criptografado também vai para um bucket do R2, fora do Supabase (`src/lib/backups/offsite.ts`). Arquivo sem criptografia nunca sai. Falha no R2 não derruba o backup: fica registrada e aparece na Plataforma. A retenção apaga as cópias antigas junto com as do Supabase.
+  - No Cloudflare: **R2 → Create bucket** (`graphicx-backups`). Em **Settings → Object lifecycle rules**, crie uma regra que apaga objetos com mais de 30 dias (rede de segurança da retenção).
+  - **R2 → Manage API tokens → Create API token**: permissão **Object Read & Write**, aplicada **só ao bucket** `graphicx-backups`.
+  - Na Vercel (Production): `R2_ACCOUNT_ID` (ID da conta, na página do R2), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` e `R2_BUCKET`. Sem elas, a cópia externa fica desligada e a Plataforma avisa.
 
 ## Variáveis de ambiente e segredos
 

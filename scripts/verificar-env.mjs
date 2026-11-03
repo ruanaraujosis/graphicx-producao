@@ -40,6 +40,11 @@ const RULES = {
   // Criptografa os backups das gráficas (32 bytes em base64). Guarde uma cópia fora da Vercel:
   // sem ela, os backups não abrem.
   BACKUP_ENCRYPTION_KEY: { format: /^[A-Za-z0-9+/]{43}=$/ },
+  // Cópia externa dos backups no Cloudflare R2 (opcionais; todas juntas).
+  R2_ACCOUNT_ID: { format: /^[0-9a-f]{32}$/ },
+  R2_ACCESS_KEY_ID: { format: /^[0-9a-f]{32}$/ },
+  R2_SECRET_ACCESS_KEY: { format: /^[0-9a-f]{64}$/ },
+  R2_BUCKET: { public: true, format: /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/ },
 };
 
 function parse(text) {
