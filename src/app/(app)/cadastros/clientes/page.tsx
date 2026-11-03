@@ -30,8 +30,8 @@ export default function ClientesPage({ searchParams }: PageProps<"/cadastros/cli
 async function Clientes({ searchParams }: { searchParams: Params }) {
   const { membership } = await requireOrg(["cadastros.ver", "pedidos.ver"]);
   const canManage = can(membership.permissions, ["cadastros.gerenciar", "pedidos.gerenciar"]);
-  // Pedidos do titular (LGPD) ficam com quem gerencia os cadastros.
-  const canPrivacy = can(membership.permissions, "cadastros.gerenciar");
+  // Pedidos do titular (LGPD): permissão própria, por ser irreversível.
+  const canPrivacy = can(membership.permissions, "lgpd.gerenciar");
   const { q, page, from, to } = parseListParams(await searchParams);
 
   const supabase = await createClient();
@@ -118,11 +118,11 @@ async function Clientes({ searchParams }: { searchParams: Params }) {
           },
         ]}
         actions={
-          canManage
+          canManage || canPrivacy
             ? (r) =>
                 r.anonymized_at ? null : (
                   <div className="flex justify-end gap-1">
-                    <CustomerFormDialog customer={r} />
+                    {canManage && <CustomerFormDialog customer={r} />}
                     {canPrivacy && <CustomerPrivacyActions customer={r} />}
                   </div>
                 )

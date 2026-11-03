@@ -51,6 +51,13 @@ export const PERMISSION_MODULES = [
     actions: ["ver", "gerenciar"],
   },
   {
+    key: "lgpd",
+    label: "Dados pessoais (LGPD)",
+    description:
+      "Exportar e anonimizar os dados de um cliente a pedido dele. Não dá para desfazer.",
+    actions: ["gerenciar"],
+  },
+  {
     key: "financeiro",
     label: "Financeiro",
     description: "Contas a receber e a pagar, fluxo de caixa.",

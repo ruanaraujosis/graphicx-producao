@@ -4,13 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * LGPD (art. 18, II e V): todos os dados de um cliente em JSON, para atender pedidos de acesso
- * e portabilidade. Só quem gerencia cadastros; o RLS limita à gráfica ativa.
+ * e portabilidade. Exige a permissão de LGPD; o RLS limita à gráfica ativa.
  */
 export async function GET(
   _request: Request,
   { params }: RouteContext<"/cadastros/clientes/[id]/dados">,
 ) {
-  const { membership } = await requireOrg("cadastros.gerenciar");
+  const { membership } = await requireOrg("lgpd.gerenciar");
   const id = z.uuid().safeParse((await params).id);
   if (!id.success) return new Response("Cliente inválido.", { status: 400 });
 
