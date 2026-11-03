@@ -106,7 +106,8 @@ async function Backups() {
                           {b.status === "pronto" &&
                             (b.encrypted ? (
                               <Pill tone="success">
-                                <Lock className="size-3" aria-hidden /> Criptografado
+                                <Lock className="mr-1 inline size-3 align-[-2px]" aria-hidden />
+                                Criptografado
                               </Pill>
                             ) : (
                               <Pill tone="warning">Sem criptografia</Pill>
