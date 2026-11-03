@@ -37,6 +37,9 @@ const RULES = {
   SHOPEE_API_HOST: { public: true, format: /^https:\/\/\S+$/ },
   // Protege o processador da fila (/api/marketplaces/worker); o mesmo valor vai no Vault.
   CRON_SECRET: { format: /^\S{32,}$/ },
+  // Criptografa os backups das gráficas (32 bytes em base64). Guarde uma cópia fora da Vercel:
+  // sem ela, os backups não abrem.
+  BACKUP_ENCRYPTION_KEY: { format: /^[A-Za-z0-9+/]{43}=$/ },
 };
 
 function parse(text) {
