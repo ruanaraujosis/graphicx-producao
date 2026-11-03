@@ -1736,6 +1736,8 @@ export type Database = {
           finished_at: string | null
           id: string
           kind: string
+          offsite_error: string | null
+          offsite_status: string | null
           organization_id: string | null
           organization_name: string
           row_counts: Json
@@ -1752,6 +1754,8 @@ export type Database = {
           finished_at?: string | null
           id?: string
           kind: string
+          offsite_error?: string | null
+          offsite_status?: string | null
           organization_id?: string | null
           organization_name: string
           row_counts?: Json
@@ -1768,6 +1772,8 @@ export type Database = {
           finished_at?: string | null
           id?: string
           kind?: string
+          offsite_error?: string | null
+          offsite_status?: string | null
           organization_id?: string | null
           organization_name?: string
           row_counts?: Json
