@@ -1731,6 +1731,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           error: string | null
+          encrypted: boolean
+          key_fingerprint: string | null
           finished_at: string | null
           id: string
           kind: string
@@ -1745,6 +1747,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           error?: string | null
+          encrypted?: boolean
+          key_fingerprint?: string | null
           finished_at?: string | null
           id?: string
           kind: string
@@ -1759,6 +1763,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           error?: string | null
+          encrypted?: boolean
+          key_fingerprint?: string | null
           finished_at?: string | null
           id?: string
           kind?: string

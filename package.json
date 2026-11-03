@@ -1,6 +1,6 @@
 {
   "name": "smart-producao",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -22,7 +22,8 @@
     "env:verificar": "node scripts/verificar-env.mjs",
     "prepare": "git config core.hooksPath .githooks || true",
     "segredos:verificar": "node scripts/verificar-segredos.mjs",
-    "plataforma:remover-grafica": "tsx --env-file=.env.local scripts/remover-grafica.ts"
+    "plataforma:remover-grafica": "tsx --env-file=.env.local scripts/remover-grafica.ts",
+    "backup:abrir": "tsx --env-file=.env.producao.local scripts/abrir-backup.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

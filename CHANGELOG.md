@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.4.0] - 2026-11-02
+
+### Adicionado
+
+- **Backups criptografados:** cada backup de gráfica sai criptografado com AES-256-GCM usando a chave `BACKUP_ENCRYPTION_KEY` (só na Vercel), amarrado à gráfica e com verificação de integridade. O banco guarda só a impressão da chave. A tela Plataforma → Backups mostra "Criptografado" em cada cópia e avisa se a chave faltar ou for inválida. Novo comando `npm run backup:abrir` para abrir um backup na hora de restaurar. A política de privacidade passa a citar a criptografia.
+
 ## [1.3.0] - 2026-11-02
 
 ### Alterado
