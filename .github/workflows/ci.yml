@@ -61,7 +61,8 @@ jobs:
 
   e2e:
     name: E2E (Playwright)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    # Em todo PR (pega o problema antes do merge) e no push da develop.
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/develop'
     needs: qualidade
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -71,10 +72,32 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+      # Supabase local (banco, Auth, Storage e API) com as migrations: telas que usam o banco
+      # rodam de verdade. As chaves são as padrão do Supabase local, não segredos.
+      - name: Subir o Supabase local
+        id: supabase
+        run: |
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit,realtime
+          supabase status -o json > /tmp/supabase.json
+          {
+            echo "url=$(jq -r '.API_URL' /tmp/supabase.json)"
+            echo "publishable=$(jq -r '.PUBLISHABLE_KEY // .ANON_KEY' /tmp/supabase.json)"
+            echo "secret=$(jq -r '.SECRET_KEY // .SERVICE_ROLE_KEY' /tmp/supabase.json)"
+          } >> "$GITHUB_OUTPUT"
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ steps.supabase.outputs.url }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ steps.supabase.outputs.publishable }}
       - run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ steps.supabase.outputs.url }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ steps.supabase.outputs.publishable }}
+          SUPABASE_SECRET_KEY: ${{ steps.supabase.outputs.secret }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
