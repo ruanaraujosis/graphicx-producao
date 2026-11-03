@@ -143,7 +143,7 @@ export function TvBoard({ token, initial }: { token: string; initial: TvSnapshot
           </span>
         )}
         {offline && (
-          <span className="ml-auto rounded-full bg-destructive px-4 py-1 text-lg font-semibold text-white">
+          <span className="ml-auto rounded-full bg-destructive px-4 py-1 text-lg font-semibold text-destructive-foreground">
             Sem conexão — mostrando os últimos dados
           </span>
         )}

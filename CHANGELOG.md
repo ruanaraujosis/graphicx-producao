@@ -4,6 +4,18 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.4.1] - 2026-11-02
+
+### Corrigido
+
+- **Acessibilidade (auditoria WCAG 2.1 AA):**
+  - Contraste: selo "Atrasado" no tema escuro (2,77:1 → 6,95:1, novo token `--destructive-foreground`); selos de canal no tema claro (Shopee, WhatsApp e Balcão com tons mais escuros, acima de 4,5:1); abas inativas no tema claro.
+  - Logo das páginas legais com nome acessível igual ao texto visível; cabeçalho da primeira coluna do DRE; campo de arquivo das fotos fora do Tab (o botão já o aciona); área de edição da etiqueta com nome e instrução para leitor de tela.
+
+### Adicionado
+
+- **Teste automático de acessibilidade** (`e2e/acessibilidade.spec.ts`): axe-core nas páginas públicas (login, recuperar senha, privacidade, termos, conectar TV e link de arte), no computador e no celular, temas claro e escuro.
+
 ## [1.4.0] - 2026-11-02
 
 ### Adicionado

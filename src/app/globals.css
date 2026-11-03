@@ -27,6 +27,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -89,6 +90,7 @@
   --accent: #f1eaff;
   --accent-foreground: #5b21b6;
   --destructive: #c0262d;
+  --destructive-foreground: #ffffff;
   --border: #dde4ee;
   --input: #7f8ea4; /* borda de campos: 3:1 sobre branco e sobre o fundo (AA 1.4.11) */
   --ring: #0e7c86;
@@ -117,9 +119,10 @@
   --info-soft: #f1ebfd;
 
   /* Canais de venda */
-  --channel-shopee: #d9411f;
-  --channel-whatsapp: #15803d;
-  --channel-balcao: #0e7c86;
+  /* Tons escuros o bastante para texto sobre o próprio fundo a 10% (WCAG AA). */
+  --channel-shopee: #a83010;
+  --channel-whatsapp: #126b34;
+  --channel-balcao: #0a636b;
 
   --chart-1: #7c3aed;
   --chart-2: #0e7c86;
@@ -154,6 +157,8 @@
   --accent: #0b2236;
   --accent-foreground: #9fd3ff;
   --destructive: #f87171;
+  /* Texto escuro: branco sobre o vermelho claro do tema escuro não passa no contraste. */
+  --destructive-foreground: #1f0707;
   --border: #2a2a2a;
   --input: #6b6b6b;
   --ring: #38c5d1;

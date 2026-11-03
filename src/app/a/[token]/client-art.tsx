@@ -103,7 +103,7 @@ export function ProofReview({
               <span
                 key={p.n}
                 aria-hidden
-                className="absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-destructive text-xs font-bold text-white shadow"
+                className="absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-destructive text-xs font-bold text-destructive-foreground shadow"
                 style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%` }}
               >
                 {p.n}
