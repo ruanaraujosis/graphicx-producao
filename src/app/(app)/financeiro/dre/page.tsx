@@ -103,7 +103,9 @@ async function Dre({ searchParams }: { searchParams: Params }) {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/50 text-xs text-muted-foreground">
             <tr>
-              <th className="px-4 py-3 text-left font-medium" />
+              <th scope="col" className="px-4 py-3 text-left font-medium">
+                <span className="sr-only">Linha do DRE</span>
+              </th>
               {months.map((m) => (
                 <th key={m.month} className="px-4 py-3 text-right font-medium capitalize">
                   {MONTH.format(new Date(`${m.month}T12:00:00Z`))}
