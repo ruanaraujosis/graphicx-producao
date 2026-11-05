@@ -10,7 +10,7 @@ const { watermarkImage, watermarkPdf, watermarkSvg, PROOF_MAX_SIDE } = await imp
 
 describe("fonte de traços", () => {
   it("desenha as letras conhecidas e ignora as outras", () => {
-    const { d, width } = strokeTextPath("PROVA #1001", 60);
+    const { d, width } = strokeTextPath("Pedido #1001", 60);
     expect(d.startsWith("M0 60L0 0")).toBe(true);
     expect(width).toBeGreaterThan(0);
     expect(strokeTextPath("çç", 60).d).toBe("");
@@ -19,7 +19,7 @@ describe("fonte de traços", () => {
 
 describe("marca d'água", () => {
   it("o SVG cobre a imagem com o texto repetido", () => {
-    const svg = watermarkSvg(800, 600, "PROVA #1001");
+    const svg = watermarkSvg(800, 600, "Pedido #1001");
     expect(svg).toContain('width="800"');
     expect(svg.match(/<use /g)?.length).toBeGreaterThan(10);
   });
@@ -35,7 +35,7 @@ describe("marca d'água", () => {
     })
       .png()
       .toBuffer();
-    const out = await watermarkImage(input, "PROVA #1001");
+    const out = await watermarkImage(input, "Pedido #1001");
     const meta = await sharp(out).metadata();
     expect(meta.format).toBe("jpeg");
     expect(Math.max(meta.width ?? 0, meta.height ?? 0)).toBe(PROOF_MAX_SIDE);
@@ -49,7 +49,7 @@ describe("marca d'água", () => {
     doc.addPage([595, 842]);
     doc.addPage([595, 842]);
     const input = Buffer.from(await doc.save());
-    const out = await watermarkPdf(input, "PROVA · Pedido #1001 · Gráfica Ação 🎉");
+    const out = await watermarkPdf(input, "Pedido #1001 · Gráfica Ação 🎉");
     const back = await PDFDocument.load(out);
     expect(back.getPageCount()).toBe(2);
     expect(out.length).toBeGreaterThan(input.length);

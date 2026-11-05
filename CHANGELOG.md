@@ -4,6 +4,14 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+### Corrigido
+
+- **Provas (Fase 8.1):** a equipe passa a ver, na tela do pedido, os pontos que o cliente marcou na prova, no lugar exato e em qualquer tamanho de tela, com a visualização ampliada e o comentário de cada ponto. A miniatura deixa de ter proporção fixa, que deslocava os pontos. A arte original não é alterada.
+
+### Alterado
+
+- **Marca d'água das provas:** o texto passa de "PROVA #1001" para "Pedido #1001" (no PDF, "Pedido #1001 · gráfica"). Provas já enviadas continuam com o texto antigo, que está gravado no arquivo.
+
 ## [1.5.0] - 2026-11-03
 
 ### Adicionado
