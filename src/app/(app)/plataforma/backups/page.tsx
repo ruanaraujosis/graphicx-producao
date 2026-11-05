@@ -1,10 +1,11 @@
-import { Lock, ShieldAlert, ShieldCheck } from "lucide-react";
+import { CloudUpload, Lock, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Suspense } from "react";
 import { BackLink, ListSkeleton } from "@/components/kit/back-link";
 import { Pill } from "@/components/kit/data-list";
 import { PageHeader } from "@/components/kit/page-header";
 import { requirePlatformAdmin } from "@/lib/auth/dal";
 import { backupKeyFromEnv } from "@/lib/backups/crypto";
+import { offsiteFromEnv } from "@/lib/backups/offsite";
 import { KEEP_AUTOMATIC } from "@/lib/backups/organization-backup";
 import { formatDateTime } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -58,7 +59,7 @@ async function Backups() {
     supabase
       .from("platform_backups")
       .select(
-        "id, organization_id, kind, status, size_bytes, row_counts, error, encrypted, created_at",
+        "id, organization_id, kind, status, size_bytes, row_counts, error, encrypted, offsite_status, offsite_error, created_at",
       )
       .order("created_at", { ascending: false })
       .limit(500),
@@ -66,7 +67,7 @@ async function Backups() {
 
   return (
     <>
-      <KeyNotice />
+      <ConfigNotice />
       <ul className="grid gap-3 lg:grid-cols-2">
         {(orgs ?? []).map((o) => {
           const mine = (backups ?? []).filter((b) => b.organization_id === o.id);
@@ -106,15 +107,31 @@ async function Backups() {
                           {b.status === "pronto" &&
                             (b.encrypted ? (
                               <Pill tone="success">
-                                <Lock className="size-3" aria-hidden /> Criptografado
+                                <Lock className="mr-1 inline size-3 align-[-2px]" aria-hidden />
+                                Criptografado
                               </Pill>
                             ) : (
                               <Pill tone="warning">Sem criptografia</Pill>
                             ))}
+                          {b.offsite_status === "copiado" && (
+                            <Pill tone="info">
+                              <CloudUpload
+                                className="mr-1 inline size-3 align-[-2px]"
+                                aria-hidden
+                              />
+                              Cópia externa
+                            </Pill>
+                          )}
+                          {b.offsite_status === "erro" && (
+                            <Pill tone="warning">Cópia externa falhou</Pill>
+                          )}
                           <span className="ml-auto text-muted-foreground tabular-nums">
                             {formatSize(b.size_bytes)}
                           </span>
                           {b.error && <p className="w-full text-xs text-destructive">{b.error}</p>}
+                          {b.offsite_error && (
+                            <p className="w-full text-xs text-warning">{b.offsite_error}</p>
+                          )}
                         </li>
                       );
                     })}
@@ -129,26 +146,37 @@ async function Backups() {
   );
 }
 
-/** Aviso quando a chave de criptografia falta ou é inválida (sem mostrar valor algum). */
-function KeyNotice() {
-  let problem: string | null = null;
+/** Avisos de configuração dos backups (sem mostrar valor algum). */
+function ConfigNotice() {
+  const problems: string[] = [];
   try {
     if (!backupKeyFromEnv()) {
-      problem =
-        "A chave de criptografia (BACKUP_ENCRYPTION_KEY) não está configurada: os próximos backups sairão só compactados, sem criptografia.";
+      problems.push(
+        "A chave de criptografia (BACKUP_ENCRYPTION_KEY) não está configurada: os próximos backups sairão só compactados, sem criptografia.",
+      );
     }
   } catch {
-    problem =
-      "A chave de criptografia (BACKUP_ENCRYPTION_KEY) é inválida: os backups vão falhar até ela ser corrigida na Vercel.";
+    problems.push(
+      "A chave de criptografia (BACKUP_ENCRYPTION_KEY) é inválida: os backups vão falhar até ela ser corrigida na Vercel.",
+    );
   }
-  if (!problem) return null;
-  return (
+  try {
+    if (!offsiteFromEnv()) {
+      problems.push(
+        "A cópia externa (Cloudflare R2) não está configurada: os backups ficam só no Supabase.",
+      );
+    }
+  } catch (e) {
+    problems.push(`A cópia externa (Cloudflare R2) está mal configurada: ${(e as Error).message}`);
+  }
+  return problems.map((problem) => (
     <p
+      key={problem}
       role="alert"
       className="flex items-start gap-2 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning"
     >
       <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
       {problem}
     </p>
-  );
+  ));
 }

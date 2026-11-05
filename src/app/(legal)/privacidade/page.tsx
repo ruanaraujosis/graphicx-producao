@@ -159,6 +159,11 @@ const sections: LegalSection[] = [
             de distribuição global.
           </li>
           <li>
+            <strong>Cloudflare (R2):</strong> guarda uma cópia externa dos backups, sempre
+            criptografada antes de sair do nosso servidor. A Cloudflare não tem a chave e não
+            consegue ler o conteúdo.
+          </li>
+          <li>
             <strong>Shopee:</strong> somente quando a gráfica conecta a loja, para sincronizar
             pedidos, anúncios, etiquetas e mensagens.
           </li>

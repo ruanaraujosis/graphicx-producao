@@ -26,6 +26,22 @@ const ROADMAP = [
     title: "Marketing Shopee",
     detail: "Impulsionamento e respostas às avaliações; venda rápida e Início como dashboard",
   },
+  {
+    phase: 8,
+    title: "Provas, produtos e estoque",
+    detail: "Pontos da prova para a equipe, inventário por contagem, busca nos seletores",
+  },
+  {
+    phase: 9,
+    title: "Pedidos de venda",
+    detail: "Documento para assinatura, status Vendido, cancelamento e devolução protegidos",
+  },
+  {
+    phase: 10,
+    title: "Arquivos, relatórios e integrações",
+    detail: "Arquivos da gráfica, relatório de vendas, API e webhooks",
+  },
+  { phase: 11, title: "Landing page", detail: "Página pública com a jornada do pedido" },
 ];
 
 /** Última fase concluída (as adiadas não contam). */

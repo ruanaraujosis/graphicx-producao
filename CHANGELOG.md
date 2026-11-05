@@ -4,6 +4,17 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.5.0] - 2026-11-03
+
+### Adicionado
+
+- **Cópia externa dos backups no Cloudflare R2:** cada backup criptografado também é enviado para um bucket do R2, fora do Supabase. Se o projeto do Supabase se perder, os backups continuam existindo. Arquivo sem criptografia nunca sai; falha no R2 não derruba o backup e aparece na Plataforma (selo "Cópia externa" ou "Cópia externa falhou"). A retenção apaga as cópias antigas nos dois lugares. Variáveis `R2_*` na Vercel; a política de privacidade passa a citar a Cloudflare.
+
+### Corrigido
+
+- **CI:** o E2E sobe um Supabase local e roda em todo PR, então telas que usam o banco (como o link de arte) também são testadas antes do merge.
+- **Plataforma → Backups:** o cadeado do selo "Criptografado" fica na mesma linha do texto.
+
 ## [1.4.1] - 2026-11-02
 
 ### Corrigido

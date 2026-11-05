@@ -12,8 +12,8 @@ const PAGES = [
   { path: "/privacidade", name: "política de privacidade" },
   { path: "/termos", name: "termos de uso" },
   { path: "/tv", name: "conectar TV" },
-  // Consulta o banco com a chave secreta, que o CI não tem: auditado só localmente.
-  { path: "/a/00000000000000000000000000000000", name: "link de arte inválido", needsDb: true },
+  // Consulta o banco (no CI, o Supabase local do job de E2E).
+  { path: "/a/00000000000000000000000000000000", name: "link de arte inválido" },
 ];
 
 type Violation = { id: string; impact: string; help: string; nodes: { target: string[] }[] };
@@ -35,9 +35,8 @@ async function audit(page: Page) {
 for (const scheme of ["light", "dark"] as const) {
   test.describe(`acessibilidade (${scheme === "light" ? "tema claro" : "tema escuro"})`, () => {
     test.use({ colorScheme: scheme });
-    for (const { path, name, needsDb } of PAGES) {
+    for (const { path, name } of PAGES) {
       test(`${name} sem violações WCAG A/AA`, async ({ page }) => {
-        test.skip(Boolean(needsDb && process.env.CI), "Sem banco no CI.");
         await page.goto(path);
         await page.waitForLoadState("networkidle");
         expect(await audit(page)).toEqual([]);
