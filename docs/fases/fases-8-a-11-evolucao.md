@@ -4,6 +4,18 @@ Prompt de trabalho para as próximas fases. Ele foi adaptado do pedido do usuár
 que o repositório já tem. Use junto com `AGENTS.md` (regras do projeto) e `PROMPT.md` (especificação
 original). Onde este documento diverge do código, confira o código antes de decidir.
 
+## Referências escolhidas pelo usuário
+
+Consulte antes da fase correspondente. Elas orientam, não são para copiar: cada ideia abaixo já foi
+filtrada para o que o GraphicX tem ou faz sentido ter.
+
+| Referência                                                                                  | Usada em      | O que aproveitar                                                                              |
+| ------------------------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------- |
+| [Relatório de vendas (Cobre Fácil)](https://www.cobrefacil.com.br/blog/relatorio-de-vendas) | 10.2          | Visões por período, colaborador, canal, produto, cliente e horário; comparação entre períodos |
+| [Pedidos de venda (Olist)](https://ajuda.olist.com/pedidos/pedidos-de-venda-configuracoes)  | 9.1, 9.3, 9.4 | Desconto do vendedor e do gerente, configurações do pedido, opções de impressão               |
+| [GraphicX em produção](https://grapphicx.vercel.app/)                                       | 11            | Identidade visual e narrativa do pipeline                                                     |
+| [Sybios (modelo de landing)](https://www.sybiosme.com/en)                                   | 11            | Seções numeradas, hero com duas CTAs, linha do tempo, FAQ agrupado                            |
+
 ## Papel e forma de trabalho
 
 Você é um engenheiro de software sênior no GraphicX (SaaS para gráficas: Next.js 16 com Cache
@@ -127,7 +139,23 @@ O que fazer:
 - Cliente (busca ou cadastro na hora), itens e variações, quantidades, preços, desconto,
   observações e forma de pagamento. Totais **recalculados no servidor**; o preço vem de
   `public.variant_price` e o desconto acima do permitido é recusado na função.
-- **Decidir com o usuário:** o limite de desconto (percentual por perfil? valor fixo?).
+- Desconto em dois níveis, como no Olist: **desconto máximo do vendedor** (percentual,
+  configurável pela gráfica) e, acima dele, **autorização do gerente** até um segundo limite. A
+  autorização usa a mesma confirmação de identidade no servidor da 9.4 (quem tem a permissão de
+  aprovar desconto confirma a própria senha), e o pedido guarda quem autorizou e o percentual.
+  **Decidir com o usuário:** os dois percentuais padrão (o Olist usa 15% como exemplo para o
+  vendedor) e qual permissão aprova desconto.
+- Configurações do pedido de venda, por gráfica (inspiradas no Olist, só as que fazem sentido aqui):
+  - vendedor obrigatório (já existe `created_by`; permitir escolher outro vendedor da equipe, que
+    é quem entra no ranking e na comissão);
+  - forma de pagamento obrigatória;
+  - aviso de cliente com contas em atraso no a receber, e mostrar as pendências dele no pedido;
+  - observação padrão impressa em todos os pedidos;
+  - marcador automático "1ª compra" para cliente sem pedidos anteriores;
+  - alerta de endereço incompleto quando o pedido tiver entrega.
+- A numeração continua sequencial por gráfica (já existe em `order_counters`).
+- Fora de escopo agora: impostos (IPI, ICMS ST) e envio de marcadores para nota fiscal, porque a
+  NF-e está adiada; depósitos múltiplos de estoque.
 
 ### 9.2 Status "Vendido"
 
@@ -141,6 +169,10 @@ O que fazer:
 - Página de impressão em `src/app/imprimir/` (já existem `pedidos` e `envio`, com
   `print-toolbar.tsx`): dados da gráfica, cliente, itens, totais, condições, campos de assinatura e
   data. Imprimir ou salvar em PDF pelo navegador. Não é nota fiscal: o documento diz isso.
+- Opções de impressão do Olist que valem aqui: número do pedido em código de barras ou QR Code (o
+  QR do pedido já existe em `/imprimir/pedidos`), cabeçalho da gráfica com nome fantasia e endereço,
+  imagem dos produtos, descrição complementar do item, ordem dos itens (inclusão, SKU ou descrição)
+  e a observação padrão.
 
 ### 9.4 Cancelamento e devolução com validação administrativa
 
@@ -155,6 +187,8 @@ O que fazer:
 - Devolução (total ou parcial): tabela nova de devoluções (itens, quantidades, motivo), entrada de
   estoque e estorno no financeiro. Uma função no banco, com idempotência (a mesma devolução não é
   aplicada duas vezes) e teste pgTAP.
+- O histórico do pedido (`order_events`) não pode ter ocorrências apagadas, como a opção "bloquear
+  exclusão de ocorrências" do Olist: cancelamento, devolução e autorização de desconto entram lá.
 
 ---
 
@@ -184,7 +218,19 @@ O que fazer:
   - receita líquida (bruta menos taxas registradas: `channel_fee` e taxa da forma de pagamento);
   - ticket médio;
   - cancelamentos e devoluções;
-  - evolução por dia, semana ou mês.
+  - evolução por dia, semana ou mês, com **comparação com o período anterior** (e o mesmo período do
+    ano passado, quando houver dado), para enxergar sazonalidade.
+- Visões inspiradas no artigo da Cobre Fácil, todas com dados que o sistema já tem:
+  - **por colaborador e por equipe** (desempenho individual e do time);
+  - **por canal** (balcão, WhatsApp, Shopee);
+  - **produtos e variações mais vendidos** (quantidade e receita);
+  - **histórico de compras do cliente** (frequência, última compra, total);
+  - **horários e dias de pico** (mapa de calor por dia da semana e hora);
+  - **conversão de orçamentos** (orçamentos que viraram pedido / orçamentos criados no período),
+    porque o status `orcamento` já existe;
+  - um resumo em cards no topo, no padrão de `StatCard` do Início.
+- Fora de escopo: funil de leads e relatório de campanhas de marketing (o sistema não guarda
+  leads nem campanhas; entram no CRM do roadmap).
 - Mesmas regras do ranking do Início: Shopee fora de "vendas por colaborador"; orçamento e
   cancelado fora da receita.
 - Sem margem nem lucro onde não houver custo confiável (a tela de margem do financeiro já existe e
@@ -234,9 +280,29 @@ emissão fiscal: a NF-e (Fase 6) continua adiada e nada deve sugerir que o siste
   - Respeitar `prefers-reduced-motion`: sem animação, conteúdo completo.
   - No celular, versão simples, sem sticky longo.
   - Rolagem nativa; nada de Lenis.
-- Referências do usuário: https://www.sybiosme.com/en (estilo de que ele gostou) e
-  https://grapphicx.vercel.app/ (marca e pipeline). O arquivo de planejamento de animações
-  mencionado pelo usuário não está no repositório; pedir a ele antes desta fase.
+- Estrutura inspirada no modelo escolhido pelo usuário (https://www.sybiosme.com/en), adaptada ao
+  GraphicX:
+  - Menu com as seções **numeradas** (01 O sistema, 02 Como funciona, 03 Módulos, 04 Integrações,
+    05 Perguntas, 06 Contato) e link "Pular para o conteúdo".
+  - Hero com uma frase curta e direta, um subtítulo e **duas CTAs**: a principal (ex.: "Falar com a
+    gente", por e-mail ou WhatsApp, sem formulário de pagamento) e a secundária ("Ver como
+    funciona", rolando até a narrativa). Ao lado, o mockup do painel.
+  - "Nossa abordagem" em 4 pontos numerados (ex.: multicanal, aprovação de arte, produção em tempo
+    real, segurança e LGPD).
+  - "Como funciona" como **linha do tempo** com marcadores (pedido → arte → produção → estoque →
+    expedição): é aqui que entra o scrollytelling sticky.
+  - Vitrine de telas reais do sistema (com dados fictícios), cada imagem com `alt` descritivo.
+  - Títulos curtos e pontuados, no estilo "Escolha. Seu plano." do modelo, e contadores "01/05" na
+    narrativa.
+  - **Perguntas frequentes** agrupadas por tema (como funciona, dados e segurança, integrações,
+    suporte), em `<details>` acessível.
+  - CTA final e rodapé com links legais.
+  - Do modelo **não** entram: tabela de preços, checkout e cupom (o GraphicX ainda não cobra pelo
+    sistema; **Decidir com o usuário** se haverá planos públicos), seletor de moeda e de idioma.
+- Marca e pipeline: https://grapphicx.vercel.app/ (logo, painel azul-marinho com onda e textos do
+  login). A landing reaproveita essa identidade.
+- O arquivo de planejamento de animações mencionado pelo usuário não está no repositório; pedir a
+  ele antes desta fase.
 - Termos e privacidade no rodapé (`LegalLinks`). Sem scripts de rastreamento: a política de
   privacidade diz que não usamos.
 
