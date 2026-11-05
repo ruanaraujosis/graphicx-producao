@@ -26,7 +26,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Onde está cada coisa (para não varrer o repositório)
 
-- Estado: fases 1 a 5 entregues (ver o topo do `CHANGELOG.md`); próximas são NF-e (6), marketing Shopee (7), Magalu/TikTok (8).
+- Estado: fases 1 a 5 e 7 entregues, em produção (ver o topo do `CHANGELOG.md`); NF-e (6) adiada; Magalu/TikTok retirados. Próximas: fases 8 a 11, com o prompt de trabalho em `docs/fases/fases-8-a-11-evolucao.md`.
 - `PROMPT.md` é a especificação original: abra **só a seção** da tarefa (Grep pelo `##`). Onde ela diverge do código, o código e este arquivo valem (ex.: a paleta roxa do `PROMPT.md` foi substituída pela da graphicX).
 - Telas: `src/app/(app)/<modulo>/`; link público de arte: `src/app/a/[token]/`; TV: `src/app/tv/[token]/`.
 - Regras de negócio: `src/lib/<dominio>/` (`stock`, `orders`, `art`, `finance`, `labels`, `tv`, `auth`). Marketplaces: núcleo em `src/lib/marketplaces/`, Shopee em `src/lib/marketplaces/shopee/`.
