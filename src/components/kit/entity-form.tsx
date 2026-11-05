@@ -27,15 +27,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { OptionSearchField } from "./search-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { digits } from "@/lib/documents";
 
-export type FieldOption = { value: string; label: string };
+export type FieldOption = { value: string; label: string; hint?: string };
 
 export type FieldConfig = {
   name: string;
   label: string;
-  type?: "text" | "email" | "tel" | "number" | "date" | "textarea" | "select" | "switch" | "cep";
+  type?:
+    | "text"
+    | "email"
+    | "tel"
+    | "number"
+    | "date"
+    | "textarea"
+    | "select"
+    | "search"
+    | "switch"
+    | "cep";
   options?: readonly FieldOption[];
   placeholder?: string;
   hint?: string;
@@ -68,6 +79,7 @@ export function EntityFormDialog({
   submitLabel = "Salvar",
   onSuccess,
   wide,
+  preview,
 }: {
   trigger?: React.ReactElement;
   open?: boolean;
@@ -81,6 +93,8 @@ export function EntityFormDialog({
   submitLabel?: string;
   onSuccess?: () => void;
   wide?: boolean;
+  /** Resumo ao vivo abaixo dos campos (ex.: saldo atual → saldo final). */
+  preview?: (values: Values) => React.ReactNode;
 }) {
   const [innerOpen, setInnerOpen] = useState(false);
   const open = controlledOpen ?? innerOpen;
@@ -201,6 +215,23 @@ export function EntityFormDialog({
                   />
                 );
                 break;
+              case "search":
+                control = (
+                  <Controller
+                    control={form.control}
+                    name={field.name}
+                    render={({ field: f }) => (
+                      <OptionSearchField
+                        id={id}
+                        options={field.options ?? []}
+                        value={(f.value as string) ?? ""}
+                        onChange={f.onChange}
+                        placeholder={field.placeholder}
+                      />
+                    )}
+                  />
+                );
+                break;
               case "switch":
                 return (
                   <Controller
@@ -278,6 +309,11 @@ export function EntityFormDialog({
               </div>
             );
           })}
+          {preview && (
+            <div aria-live="polite" className="sm:col-span-2">
+              {preview(values)}
+            </div>
+          )}
         </form>
         <DialogFooter>
           <Button type="submit" form={formId} disabled={pending}>

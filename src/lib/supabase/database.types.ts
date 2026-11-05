@@ -1895,6 +1895,7 @@ export type Database = {
           name: string;
           attributes: Json;
           base_price: number;
+          min_stock: number;
           weight_g: number | null;
           length_cm: number | null;
           width_cm: number | null;
@@ -1911,6 +1912,7 @@ export type Database = {
           name: string;
           attributes?: Json;
           base_price?: number;
+          min_stock?: number;
           weight_g?: number | null;
           length_cm?: number | null;
           width_cm?: number | null;
@@ -1927,6 +1929,7 @@ export type Database = {
           name?: string;
           attributes?: Json;
           base_price?: number;
+          min_stock?: number;
           weight_g?: number | null;
           length_cm?: number | null;
           width_cm?: number | null;
@@ -2281,6 +2284,8 @@ export type Database = {
           quantity: number;
           unit_cost: number | null;
           reason: string | null;
+          previous_balance: number | null;
+          final_balance: number | null;
           reference: string | null;
           created_by: string | null;
           created_at: string;
@@ -2296,6 +2301,8 @@ export type Database = {
           quantity: number;
           unit_cost?: number | null;
           reason?: string | null;
+          previous_balance?: number | null;
+          final_balance?: number | null;
           reference?: string | null;
           created_by?: string | null;
           created_at?: string;
@@ -2311,6 +2318,8 @@ export type Database = {
           quantity?: number;
           unit_cost?: number | null;
           reason?: string | null;
+          previous_balance?: number | null;
+          final_balance?: number | null;
           reference?: string | null;
           created_by?: string | null;
           created_at?: string;
@@ -2345,6 +2354,7 @@ export type Database = {
           id: string;
           slug: string;
           name: string;
+          is_demo: boolean;
           legal_name: string | null;
           document: string | null;
           phone: string | null;
@@ -2363,6 +2373,7 @@ export type Database = {
           id?: string;
           slug: string;
           name: string;
+          is_demo?: boolean;
           legal_name?: string | null;
           document?: string | null;
           phone?: string | null;
@@ -2381,6 +2392,7 @@ export type Database = {
           id?: string;
           slug?: string;
           name?: string;
+          is_demo?: boolean;
           legal_name?: string | null;
           document?: string | null;
           phone?: string | null;
@@ -2610,6 +2622,10 @@ export type Database = {
       };
     };
     Functions: {
+      inventory_count: {
+        Args: { p_material: string | null; p_variant: string | null; p_counted: number; p_reason: string }
+        Returns: { previous_balance: number; final_balance: number; difference: number }[]
+      }
       anonymize_customer: {
         Args: { p_customer: string }
         Returns: undefined

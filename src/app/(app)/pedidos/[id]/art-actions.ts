@@ -132,11 +132,8 @@ export async function publishProof(input: {
   let marked: Buffer;
   try {
     marked = isPdf
-      ? await watermarkPdf(
-          source,
-          `PROVA · Pedido ${orderNumber(order.number)} · ${membership.name}`,
-        )
-      : await watermarkImage(source, `PROVA ${orderNumber(order.number)}`);
+      ? await watermarkPdf(source, `Pedido ${orderNumber(order.number)} · ${membership.name}`)
+      : await watermarkImage(source, `Pedido ${orderNumber(order.number)}`);
   } catch (e) {
     await admin.storage.from(ART_BUCKET).remove([input.path]);
     return {

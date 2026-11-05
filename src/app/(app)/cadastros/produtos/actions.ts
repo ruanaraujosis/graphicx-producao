@@ -4,17 +4,44 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireOrg } from "@/lib/auth/dal";
+import { can } from "@/lib/auth/permissions";
 import { dbErrorMessage, saveOrgRecord, type ActionResult } from "@/lib/crud";
 import { createClient } from "@/lib/supabase/server";
 import {
   ATTRIBUTE_KEYS,
   bomSchema,
+  firstVariantSchema,
   productSchema,
   variantPricesSchema,
   variantSchema,
 } from "./schema";
 
 const productPath = (id: string) => `/cadastros/produtos/${id}`;
+
+/**
+ * Estoque inicial de uma variação nova: uma entrada no histórico, no máximo uma por variação
+ * (índice único no banco; reenviar o formulário não duplica). Exige permissão de estoque.
+ */
+async function recordInitialStock(variantId: string, quantity: number | null) {
+  if (!quantity) return "";
+  const { session, membership } = await requireOrg("cadastros.gerenciar");
+  if (!can(membership.permissions, "estoque.gerenciar")) {
+    return " O estoque inicial não foi lançado: falta a permissão de estoque.";
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.from("stock_movements").insert({
+    organization_id: membership.organizationId,
+    variant_id: variantId,
+    type: "entrada",
+    quantity,
+    reason: "Estoque inicial",
+    reference: "estoque-inicial",
+    created_by: session.id,
+  });
+  if (error && error.code !== "23505") return " Não foi possível lançar o estoque inicial.";
+  revalidatePath("/estoque", "layout");
+  return ` Estoque inicial: ${quantity.toLocaleString("pt-BR")}.`;
+}
 
 export async function saveProduct(
   id: string | null,
@@ -24,6 +51,8 @@ export async function saveProduct(
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   const validId = id ? z.uuid().safeParse(id) : null;
   if (validId && !validId.success) return { ok: false, error: "Produto inválido." };
+  const first = validId ? null : firstVariantSchema.safeParse(raw);
+  if (first && !first.success) return { ok: false, error: first.error.issues[0].message };
 
   const result = await saveOrgRecord({
     table: "products",
@@ -37,6 +66,21 @@ export async function saveProduct(
       fallback: "Não foi possível salvar o produto.",
     },
   });
+  // Produto novo com a primeira variação: preço, estoque mínimo e inicial já no cadastro.
+  const firstVariant = first?.success ? first.data : null;
+  if (result.ok && !validId && firstVariant?.first_sku) {
+    const variant = await saveVariant(result.data.id, null, {
+      name: "Padrão",
+      sku: firstVariant.first_sku,
+      base_price: String(firstVariant.first_price ?? 0),
+      min_stock: String(firstVariant.first_min_stock ?? 0),
+      initial_stock: String(firstVariant.first_initial_stock ?? ""),
+      active: true,
+    });
+    if (!variant.ok) {
+      return { ok: false, error: `Produto criado, mas a variação não: ${variant.error}` };
+    }
+  }
   // Produto novo: vai direto para a tela dele, onde ficam variações, ficha e fotos.
   if (result.ok && !validId) redirect(productPath(result.data.id));
   return result;
@@ -55,17 +99,17 @@ export async function saveVariant(
     return { ok: false, error: "Variação inválida." };
   }
 
-  const { tamanho, espessura, cor, acabamento, ...rest } = parsed.data;
+  const { tamanho, espessura, cor, acabamento, initial_stock, min_stock, ...rest } = parsed.data;
   const attrs = { tamanho, espessura, cor, acabamento };
   const attributes = Object.fromEntries(
     ATTRIBUTE_KEYS.filter((k) => attrs[k]).map((k) => [k, attrs[k]]),
   );
 
-  return saveOrgRecord({
+  const result = await saveOrgRecord({
     table: "product_variants",
     permission: "cadastros.gerenciar",
     id: variant?.data,
-    values: { ...rest, attributes, product_id: product.data },
+    values: { ...rest, min_stock: min_stock ?? 0, attributes, product_id: product.data },
     revalidate: [productPath(product.data), "/cadastros/produtos"],
     messages: {
       created: `Variação ${rest.sku} criada.`,
@@ -74,6 +118,9 @@ export async function saveVariant(
       fallback: "Não foi possível salvar a variação.",
     },
   });
+  if (!result.ok || variant) return result;
+  const note = await recordInitialStock(result.data.id, initial_stock);
+  return { ...result, message: result.message + note };
 }
 
 /** Confere que a variação é da gráfica ativa e devolve o produto dela. */

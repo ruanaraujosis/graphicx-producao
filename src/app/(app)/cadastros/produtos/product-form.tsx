@@ -4,7 +4,7 @@ import { PackagePlus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EntityFormDialog, type FieldConfig, type FieldOption } from "@/components/kit/entity-form";
 import { saveProduct } from "./actions";
-import { productSchema } from "./schema";
+import { firstVariantSchema, productSchema } from "./schema";
 
 export type ProductRow = {
   id: string;
@@ -18,6 +18,32 @@ export type ProductRow = {
   cfop: string | null;
   active: boolean;
 };
+
+/** Só ao criar: a primeira variação já com preço e estoque (opcional; sem SKU, fica para depois). */
+const FIRST_VARIANT_FIELDS: FieldConfig[] = [
+  {
+    name: "first_sku",
+    label: "SKU da primeira variação",
+    half: true,
+    placeholder: "CANECA-BRANCA",
+    hint: "Opcional. Preenchido, o produto já nasce com preço e estoque.",
+  },
+  { name: "first_price", label: "Preço (R$)", type: "number", half: true },
+  {
+    name: "first_initial_stock",
+    label: "Estoque inicial",
+    type: "number",
+    half: true,
+    showWhen: (v) => Boolean(String(v.first_sku ?? "").trim()),
+  },
+  {
+    name: "first_min_stock",
+    label: "Estoque mínimo",
+    type: "number",
+    half: true,
+    showWhen: (v) => Boolean(String(v.first_sku ?? "").trim()),
+  },
+];
 
 function fields(categories: readonly FieldOption[], editing: boolean): FieldConfig[] {
   const list: FieldConfig[] = [
@@ -63,6 +89,7 @@ function fields(categories: readonly FieldOption[], editing: boolean): FieldConf
     { name: "cfop", label: "CFOP padrão", inputMode: "numeric", half: true, hint: "Ex.: 5102." },
   ];
   if (editing) list.push({ name: "active", label: "Produto ativo", type: "switch" });
+  else list.push(...FIRST_VARIANT_FIELDS);
   return list;
 }
 
@@ -80,7 +107,7 @@ export function ProductFormDialog({
       description={
         product
           ? undefined
-          : "Depois de criar, você cadastra as variações, a ficha técnica e as fotos."
+          : "Preencha a primeira variação para já definir preço e estoque. As outras variações, a ficha técnica e as fotos ficam na tela do produto."
       }
       trigger={
         product ? (
@@ -95,7 +122,7 @@ export function ProductFormDialog({
           </Button>
         )
       }
-      schema={productSchema}
+      schema={product ? productSchema : productSchema.and(firstVariantSchema)}
       defaultValues={{
         name: product?.name ?? "",
         category_id: product?.category_id ?? "__none",
@@ -106,6 +133,10 @@ export function ProductFormDialog({
         cest: product?.cest ?? "",
         cfop: product?.cfop ?? "",
         active: product?.active ?? true,
+        first_sku: "",
+        first_price: "",
+        first_initial_stock: "",
+        first_min_stock: "",
       }}
       fields={fields(categories, Boolean(product))}
       action={(values) => saveProduct(product?.id ?? null, values)}

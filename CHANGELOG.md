@@ -4,6 +4,23 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.6.0] - 2026-11-05
+
+### Adicionado
+
+- **Produto com preço e estoque no cadastro (Fase 8.2):** o produto novo pode já nascer com a primeira variação (SKU, preço, estoque inicial e mínimo). Variações ganham **estoque mínimo** e, ao serem criadas, **estoque inicial**, que entra uma única vez no histórico como "Estoque inicial" (índice único no banco; reenviar não duplica).
+- **Dados de demonstração (Fase 8.5):** `npm run demo:dados -- <slug>` cria 10 insumos, 5 produtos e 7 variações com ficha técnica e estoque inicial, só em gráficas marcadas como demonstração (`organizations.is_demo`, com `--marcar-demo`). Pode rodar de novo sem duplicar; os SKUs começam com DEMO-.
+
+### Corrigido
+
+- **Inventário (Fase 8.3):** o ajuste de estoque deixa de somar a quantidade ao saldo. Novo botão **Inventário** no Estoque: você digita a quantidade contada, vê "saldo atual → saldo final" antes de confirmar, e ela passa a ser o saldo. O histórico guarda saldo anterior, saldo final, motivo, quem contou e quando (função `inventory_count`, com trava contra contagens simultâneas). O banco recusa ajustes lançados fora do inventário.
+- **Provas (Fase 8.1):** a equipe passa a ver, na tela do pedido, os pontos que o cliente marcou na prova, no lugar exato e em qualquer tamanho de tela, com a visualização ampliada e o comentário de cada ponto. A miniatura deixa de ter proporção fixa, que deslocava os pontos. A arte original não é alterada.
+
+### Alterado
+
+- **Busca no lugar de listas longas (Fase 8.4):** itens das movimentações, do inventário, da baixa por ficha técnica e os insumos da ficha técnica agora se escolhem por busca (nome, SKU ou variação; teclado, celular e aviso de "nenhum item encontrado"). Novo tipo de campo `search` no formulário padrão.
+- **Marca d'água das provas:** o texto passa de "PROVA #1001" para "Pedido #1001" (no PDF, "Pedido #1001 · gráfica"). Provas já enviadas continuam com o texto antigo, que está gravado no arquivo.
+
 ## [1.5.0] - 2026-11-03
 
 ### Adicionado

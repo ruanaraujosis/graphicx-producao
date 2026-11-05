@@ -9,6 +9,7 @@ import { Pill } from "@/components/kit/data-list";
 import { DueBadge, StatusPill } from "@/components/kit/order-badges";
 import { Button } from "@/components/ui/button";
 import { ART_BUCKET, formatBytes } from "@/lib/art/files";
+import { parsePins } from "@/lib/art/pins";
 import { requireOrg } from "@/lib/auth/dal";
 import { can } from "@/lib/auth/permissions";
 import { digits, formatPhone } from "@/lib/documents";
@@ -23,6 +24,7 @@ import {
 } from "@/lib/orders/status";
 import { orderQrPng, orderUrl } from "@/lib/orders/qrcode";
 import { OrderQrDialog } from "./order-qr-dialog";
+import { ProofPins } from "./proof-pins";
 import { ShopeeShipping } from "./shopee-shipping";
 import { SHOPEE_STATUS_LABELS } from "@/lib/marketplaces/shopee/labels";
 import { createClient } from "@/lib/supabase/server";
@@ -335,6 +337,10 @@ async function Pedido({ params }: { params: Params }) {
                         const vs = VERSION_STATUS[v.status];
                         const vReviews = reviews.filter((r) => r.version_id === v.id);
                         const thumb = urlByPath.get(v.proof_path);
+                        // Pontos do pedido de alteração mais recente (reviews vêm do mais novo).
+                        const lastChange = vReviews.find(
+                          (r) => r.decision === "alteracao" && parsePins(r.pins).length > 0,
+                        );
                         return (
                           <li key={v.id} className="flex flex-col gap-2 rounded-xl border p-3">
                             <div className="flex items-center justify-between gap-2">
@@ -342,11 +348,12 @@ async function Pedido({ params }: { params: Params }) {
                               <Pill tone={vs.tone}>{vs.label}</Pill>
                             </div>
                             {thumb ? (
-                              // eslint-disable-next-line @next/next/no-img-element -- URL assinada e temporária
-                              <img
+                              <ProofPins
                                 src={thumb}
-                                alt={`Prova v${v.version}`}
-                                className="aspect-video w-full rounded-lg border bg-muted object-contain"
+                                version={v.version}
+                                pins={parsePins(lastChange?.pins)}
+                                comment={lastChange?.comment ?? null}
+                                reviewer={lastChange?.reviewer_name ?? null}
                               />
                             ) : (
                               <div className="flex aspect-video items-center justify-center rounded-lg border bg-muted text-sm text-muted-foreground">
