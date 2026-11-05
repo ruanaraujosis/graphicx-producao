@@ -149,3 +149,61 @@ export function SearchPicker({
     </div>
   );
 }
+
+const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+/** Filtra opções por nome e dica (SKU, variação), sem diferenciar acentos e maiúsculas. */
+export function matchOptions<T extends PickerOption>(options: readonly T[], q: string) {
+  const terms = fold(q).split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return [...options];
+  return options.filter((o) => {
+    const text = fold(`${o.label} ${o.hint ?? ""}`);
+    return terms.every((t) => text.includes(t));
+  });
+}
+
+/**
+ * Escolha de um item de uma lista longa por busca (nome, SKU, variação). Guarda o `value` da
+ * opção escolhida; apagar ou mudar o texto desfaz a escolha.
+ */
+export function OptionSearchField({
+  id,
+  options,
+  value,
+  onChange,
+  placeholder = "Buscar por nome ou SKU",
+  emptyText = "Nenhum item encontrado.",
+}: {
+  id?: string;
+  options: readonly PickerOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  emptyText?: string;
+}) {
+  const selected = options.find((o) => o.value === value);
+  const [text, setText] = useState(selected?.label ?? "");
+  // Escolha feita de fora (ex.: valor inicial) atualiza o texto.
+  const [lastValue, setLastValue] = useState(value);
+  if (value !== lastValue) {
+    setLastValue(value);
+    setText(selected?.label ?? "");
+  }
+  return (
+    <SearchPicker
+      id={id}
+      value={text}
+      placeholder={placeholder}
+      emptyText={emptyText}
+      onTextChange={(t) => {
+        setText(t);
+        if (value) onChange("");
+      }}
+      onPick={(o) => {
+        setText(o.label);
+        onChange(o.value);
+      }}
+      search={(q) => matchOptions(options, q === selected?.label ? "" : q)}
+    />
+  );
+}

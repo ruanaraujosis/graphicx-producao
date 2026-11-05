@@ -92,7 +92,7 @@ async function Produto({ params }: { params: PageProps<"/cadastros/produtos/[id]
       supabase
         .from("product_variants")
         .select(
-          "id, sku, name, attributes, base_price, weight_g, length_cm, width_cm, height_cm, active, variant_channel_prices(channel, price), bom_items(material_id, quantity, waste_pct)",
+          "id, sku, name, attributes, base_price, min_stock, weight_g, length_cm, width_cm, height_cm, active, variant_channel_prices(channel, price), bom_items(material_id, quantity, waste_pct)",
         )
         .eq("product_id", id)
         .order("active", { ascending: false })
@@ -139,6 +139,7 @@ async function Produto({ params }: { params: PageProps<"/cadastros/produtos/[id]
     name: v.name,
     attributes: (v.attributes ?? {}) as Record<string, string>,
     base_price: v.base_price,
+    min_stock: Number(v.min_stock),
     weight_g: v.weight_g,
     length_cm: v.length_cm,
     width_cm: v.width_cm,

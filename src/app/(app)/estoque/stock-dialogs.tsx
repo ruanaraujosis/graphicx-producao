@@ -1,26 +1,29 @@
 "use client";
 
-import { ArrowLeftRight, ClipboardMinus } from "lucide-react";
+import { ArrowLeftRight, ClipboardCheck, ClipboardMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EntityFormDialog, type FieldOption } from "@/components/kit/entity-form";
+import { parseDecimal } from "@/lib/form-schemas";
 import { MOVEMENT_LABELS } from "@/lib/stock/units";
-import { consumeByBom, registerMovement } from "./actions";
-import { MANUAL_MOVEMENTS, consumeSchema, movementSchema } from "./schema";
+import { consumeByBom, countInventory, registerMovement } from "./actions";
+import type { StockItemOption } from "./data";
+import { MANUAL_MOVEMENTS, consumeSchema, inventorySchema, movementSchema } from "./schema";
 
 const HINTS: Record<(typeof MANUAL_MOVEMENTS)[number], string> = {
   entrada: "Compra ou recebimento. Informe o custo para atualizar o custo médio.",
   saida: "Saída avulsa (ex.: uso interno, amostra).",
-  ajuste: "Correção de inventário: positivo soma, negativo subtrai.",
   perda: "Quebra, defeito, validade.",
   reserva: "Separa para um pedido sem tirar do estoque.",
   liberacao: "Devolve uma reserva ao disponível.",
 };
 
+const fmt = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 3 });
+
 export function MovementDialog({ items }: { items: readonly FieldOption[] }) {
   return (
     <EntityFormDialog
       title="Lançar movimentação"
-      description="O lançamento fica no histórico e não pode ser apagado; para corrigir, lance um ajuste."
+      description="O lançamento fica no histórico e não pode ser apagado. Para corrigir o saldo, use o Inventário."
       trigger={
         <Button>
           <ArrowLeftRight />
@@ -33,9 +36,9 @@ export function MovementDialog({ items }: { items: readonly FieldOption[] }) {
         {
           name: "item",
           label: "Item",
-          type: "select",
+          type: "search",
           options: items,
-          placeholder: "Escolha o insumo ou produto",
+          placeholder: "Buscar insumo ou produto por nome ou SKU",
         },
         {
           name: "type",
@@ -60,6 +63,60 @@ export function MovementDialog({ items }: { items: readonly FieldOption[] }) {
   );
 }
 
+/** Inventário: a quantidade contada passa a ser o saldo (não é somada). */
+export function InventoryDialog({ items }: { items: readonly StockItemOption[] }) {
+  return (
+    <EntityFormDialog
+      title="Inventário"
+      description="Digite a quantidade que você contou. Ela passa a ser o saldo do item; a diferença fica registrada no histórico com o motivo e quem contou."
+      trigger={
+        <Button variant="outline">
+          <ClipboardCheck />
+          Inventário
+        </Button>
+      }
+      schema={inventorySchema}
+      defaultValues={{ item: "", counted: "", reason: "Contagem de inventário" }}
+      fields={[
+        {
+          name: "item",
+          label: "Item",
+          type: "search",
+          options: items,
+          placeholder: "Buscar insumo ou produto por nome ou SKU",
+        },
+        { name: "counted", label: "Quantidade contada", type: "number", half: true },
+        { name: "reason", label: "Motivo", half: true },
+      ]}
+      preview={(v) => {
+        const item = items.find((i) => i.value === v.item);
+        if (!item) return null;
+        const counted = parseDecimal(v.counted);
+        if (counted === undefined || Number.isNaN(counted) || counted < 0) {
+          return (
+            <p className="rounded-xl bg-muted px-3 py-2 text-sm">
+              Saldo atual: <strong>{fmt(item.onHand)}</strong>
+            </p>
+          );
+        }
+        const diff = counted - item.onHand;
+        return (
+          <p className="rounded-xl bg-muted px-3 py-2 text-sm">
+            Saldo atual <strong>{fmt(item.onHand)}</strong> → saldo final{" "}
+            <strong>{fmt(counted)}</strong>{" "}
+            <span className={diff < 0 ? "text-destructive" : diff > 0 ? "text-success" : ""}>
+              ({diff > 0 ? "+" : ""}
+              {fmt(diff)})
+            </span>
+          </p>
+        );
+      }}
+      action={countInventory}
+      submitLabel="Ajustar saldo"
+    />
+  );
+}
+
 export function ConsumeDialog({ variants }: { variants: readonly FieldOption[] }) {
   return (
     <EntityFormDialog
@@ -74,7 +131,13 @@ export function ConsumeDialog({ variants }: { variants: readonly FieldOption[] }
       schema={consumeSchema}
       defaultValues={{ variant_id: "", quantity: "1", reference: "" }}
       fields={[
-        { name: "variant_id", label: "Produto / variação", type: "select", options: variants },
+        {
+          name: "variant_id",
+          label: "Produto / variação",
+          type: "search",
+          options: variants,
+          placeholder: "Buscar por nome ou SKU",
+        },
         { name: "quantity", label: "Unidades", type: "number", half: true },
         { name: "reference", label: "Referência", half: true, placeholder: "Ex.: venda balcão" },
       ]}

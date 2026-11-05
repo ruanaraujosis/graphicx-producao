@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireOrg } from "@/lib/auth/dal";
 import { dbErrorMessage, type ActionResult } from "@/lib/crud";
 import { createClient } from "@/lib/supabase/server";
-import { consumeSchema, movementSchema } from "./schema";
+import { consumeSchema, inventorySchema, movementSchema } from "./schema";
 
 function revalidateStock() {
   revalidatePath("/estoque", "layout");
@@ -62,4 +62,33 @@ export async function consumeByBom(raw: Record<string, unknown>): Promise<Action
 
   revalidateStock();
   return { ok: true, message: `Baixa feita em ${data} insumo(s).` };
+}
+
+/** Inventário: grava a quantidade contada como saldo final; o banco calcula a diferença. */
+export async function countInventory(raw: Record<string, unknown>): Promise<ActionResult> {
+  await requireOrg("estoque.gerenciar");
+  const parsed = inventorySchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
+  const [kind, id] = parsed.data.item.split(":");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("inventory_count", {
+    p_material: kind === "material" ? id : null,
+    p_variant: kind === "variant" ? id : null,
+    p_counted: parsed.data.counted,
+    p_reason: parsed.data.reason,
+  });
+  if (error) {
+    return { ok: false, error: dbErrorMessage(error, { fallback: "Não foi possível ajustar." }) };
+  }
+  const result = data?.[0];
+  revalidateStock();
+  if (!result || Number(result.difference) === 0) {
+    return { ok: true, message: "A contagem confere com o saldo: nada foi ajustado." };
+  }
+  const fmt = (n: number) => Number(n).toLocaleString("pt-BR");
+  return {
+    ok: true,
+    message: `Saldo ajustado de ${fmt(result.previous_balance)} para ${fmt(result.final_balance)}.`,
+  };
 }

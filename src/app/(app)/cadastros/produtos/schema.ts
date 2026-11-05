@@ -48,8 +48,39 @@ export const ATTRIBUTE_LABELS: Record<(typeof ATTRIBUTE_KEYS)[number], string> =
   acabamento: "Acabamento",
 };
 
+const skuSchema = z.preprocess(
+  (v) => (typeof v === "string" ? v.trim().toUpperCase() : v),
+  z
+    .string({ error: "Informe o SKU." })
+    .regex(/^[A-Z0-9._-]{2,40}$/, "SKU: letras, números, ponto, hífen ou _ (2 a 40)."),
+);
+
+const stockQty = (label: string) => decimal({ label, min: 0, max: 10_000_000, optional: true });
+
+/**
+ * Primeira variação no cadastro do produto (opcional): com o SKU preenchido, o produto já nasce
+ * com preço, estoque inicial e mínimo.
+ */
+export const firstVariantSchema = z
+  .object({
+    first_sku: z.preprocess(
+      (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+      skuSchema.nullable(),
+    ),
+    first_price: decimal({ label: "Preço", min: 0, max: 1_000_000, optional: true }),
+    first_initial_stock: stockQty("Estoque inicial"),
+    first_min_stock: stockQty("Estoque mínimo"),
+  })
+  .refine((v) => v.first_sku === null || v.first_price !== null, {
+    path: ["first_price"],
+    message: "Informe o preço da variação.",
+  });
+
 export const variantSchema = z.object({
   name: requiredText("o nome da variação", 1, 120),
+  min_stock: stockQty("Estoque mínimo"),
+  /** Só ao criar: vira uma entrada "Estoque inicial" no histórico. */
+  initial_stock: stockQty("Estoque inicial"),
   sku: z.preprocess(
     (v) => (typeof v === "string" ? v.trim().toUpperCase() : v),
     z
