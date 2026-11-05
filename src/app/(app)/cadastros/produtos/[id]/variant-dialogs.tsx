@@ -5,6 +5,7 @@ import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ChannelBadge } from "@/components/kit/channel-badge";
 import { EntityFormDialog, type FieldConfig } from "@/components/kit/entity-form";
+import { OptionSearchField } from "@/components/kit/search-picker";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -18,13 +19,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   CHANNEL_LABELS,
   SALES_CHANNELS,
@@ -44,6 +38,7 @@ export type VariantView = {
   name: string;
   attributes: Record<string, string>;
   base_price: number;
+  min_stock: number;
   weight_g: number | null;
   length_cm: number | null;
   width_cm: number | null;
@@ -68,6 +63,13 @@ const VARIANT_FIELDS: FieldConfig[] = [
     half: true,
     hint: "Os canais aplicam o ajuste sobre ele.",
   },
+  {
+    name: "min_stock",
+    label: "Estoque mínimo",
+    type: "number",
+    half: true,
+    hint: "Abaixo disso, o estoque avisa.",
+  },
   { name: "tamanho", label: "Tamanho", half: true, placeholder: "5x5 cm" },
   { name: "espessura", label: "Espessura", half: true, placeholder: "3 mm" },
   { name: "cor", label: "Cor", half: true, placeholder: "Cristal" },
@@ -84,6 +86,14 @@ const VARIANT_FIELDS: FieldConfig[] = [
   { name: "width_cm", label: "Largura (cm)", type: "number", half: true },
   { name: "height_cm", label: "Altura (cm)", type: "number", half: true },
 ];
+
+const INITIAL_STOCK_FIELD: FieldConfig = {
+  name: "initial_stock",
+  label: "Estoque inicial",
+  type: "number",
+  half: true,
+  hint: "Entra uma vez no histórico como Estoque inicial. Depois, use o Inventário.",
+};
 
 export function VariantFormDialog({
   productId,
@@ -104,6 +114,8 @@ export function VariantFormDialog({
         name: variant?.name ?? "",
         sku: variant?.sku ?? "",
         base_price: br(variant?.base_price ?? 0),
+        min_stock: br(variant?.min_stock ?? 0),
+        initial_stock: "",
         tamanho: variant?.attributes.tamanho ?? "",
         espessura: variant?.attributes.espessura ?? "",
         cor: variant?.attributes.cor ?? "",
@@ -117,7 +129,7 @@ export function VariantFormDialog({
       fields={
         variant
           ? [...VARIANT_FIELDS, { name: "active", label: "Variação ativa", type: "switch" }]
-          : VARIANT_FIELDS
+          : [...VARIANT_FIELDS, INITIAL_STOCK_FIELD]
       }
       action={(values) => saveVariant(productId, variant?.id ?? null, values)}
       submitLabel={variant ? "Salvar" : "Criar variação"}
@@ -237,6 +249,10 @@ export function BomDialog({
   const baseId = useId();
   const [pending, startTransition] = useTransition();
   const byId = new Map(materials.map((m) => [m.id, m]));
+  const materialOptions = materials.map((m) => ({
+    value: m.id,
+    label: `${m.name} (${UNIT_SHORT[m.unit]})`,
+  }));
 
   const cost = bomUnitCost(
     rows.flatMap((r) => {
@@ -283,21 +299,13 @@ export function BomDialog({
                     <Label htmlFor={`${baseId}-${i}-material`} className="text-xs">
                       Insumo
                     </Label>
-                    <Select
+                    <OptionSearchField
+                      id={`${baseId}-${i}-material`}
+                      options={materialOptions}
                       value={row.material_id}
-                      onValueChange={(v) => update(i, { material_id: v })}
-                    >
-                      <SelectTrigger id={`${baseId}-${i}-material`} className="w-full">
-                        <SelectValue placeholder="Escolha o insumo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {materials.map((mat) => (
-                          <SelectItem key={mat.id} value={mat.id}>
-                            {mat.name} ({UNIT_SHORT[mat.unit]})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onChange={(v) => update(i, { material_id: v })}
+                      placeholder="Buscar insumo"
+                    />
                   </div>
                   <div className="flex flex-col gap-1">
                     <Label htmlFor={`${baseId}-${i}-qty`} className="text-xs">

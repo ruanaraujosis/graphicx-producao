@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/kit/page-header";
 import { requireOrg } from "@/lib/auth/dal";
 import { can } from "@/lib/auth/permissions";
 import { stockDialogOptions } from "./data";
-import { ConsumeDialog, MovementDialog } from "./stock-dialogs";
+import { ConsumeDialog, InventoryDialog, MovementDialog } from "./stock-dialogs";
 import { StockNav } from "./stock-nav";
 
 export default function EstoqueLayout({ children }: LayoutProps<"/estoque">) {
@@ -33,6 +33,7 @@ async function Actions() {
   return (
     <>
       {canConsume && <ConsumeDialog variants={consumable} />}
+      {canMove && <InventoryDialog items={items} />}
       {canMove && <MovementDialog items={items} />}
     </>
   );

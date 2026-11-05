@@ -50,20 +50,21 @@ Requisitos: Node 22+ e um projeto no [Supabase](https://supabase.com) (o plano g
 
 ### Scripts
 
-| Script                                           | O que faz                                                                             |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `npm run dev`                                    | Servidor de desenvolvimento                                                           |
-| `npm run build` / `start`                        | Build e servidor de produção                                                          |
-| `npm run lint` / `typecheck` / `format`          | ESLint, TypeScript e Prettier                                                         |
-| `npm test`                                       | Testes unitários (Vitest)                                                             |
-| `npm run test:e2e`                               | Testes de ponta a ponta (Playwright)                                                  |
-| `npm run db:new <nome>`                          | Cria uma migration nova em `supabase/migrations/`                                     |
-| `npm run db:push`                                | Aplica as migrations no projeto Supabase vinculado                                    |
-| `npm run db:types`                               | Regenera `src/lib/supabase/database.types.ts` a partir do banco                       |
-| `npm run plataforma:iniciar`                     | Cria a primeira gráfica e o SuperAdmin definidos no `.env.local`                      |
-| `npm run plataforma:remover-grafica -- <codigo>` | Simula a remoção de uma gráfica; com `--confirmar`, remove (contas e auditoria ficam) |
-| `npm run env:verificar`                          | Confere o `.env.local` sem mostrar valores (`-- --conexao` testa o Supabase)          |
-| `npm run segredos:verificar`                     | Procura credenciais nos arquivos versionados (pre-commit e CI)                        |
+| Script                                           | O que faz                                                                                                                                                       |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                                    | Servidor de desenvolvimento                                                                                                                                     |
+| `npm run build` / `start`                        | Build e servidor de produção                                                                                                                                    |
+| `npm run lint` / `typecheck` / `format`          | ESLint, TypeScript e Prettier                                                                                                                                   |
+| `npm test`                                       | Testes unitários (Vitest)                                                                                                                                       |
+| `npm run test:e2e`                               | Testes de ponta a ponta (Playwright)                                                                                                                            |
+| `npm run db:new <nome>`                          | Cria uma migration nova em `supabase/migrations/`                                                                                                               |
+| `npm run db:push`                                | Aplica as migrations no projeto Supabase vinculado                                                                                                              |
+| `npm run db:types`                               | Regenera `src/lib/supabase/database.types.ts` a partir do banco                                                                                                 |
+| `npm run plataforma:iniciar`                     | Cria a primeira gráfica e o SuperAdmin definidos no `.env.local`                                                                                                |
+| `npm run plataforma:remover-grafica -- <codigo>` | Simula a remoção de uma gráfica; com `--confirmar`, remove (contas e auditoria ficam)                                                                           |
+| `npm run demo:dados -- <codigo> [--marcar-demo]` | Dados de demonstração (insumos, produtos, variações, fichas e estoque) numa gráfica de demonstração; não duplica. `demo:dados:producao` usa o banco de produção |
+| `npm run env:verificar`                          | Confere o `.env.local` sem mostrar valores (`-- --conexao` testa o Supabase)                                                                                    |
+| `npm run segredos:verificar`                     | Procura credenciais nos arquivos versionados (pre-commit e CI)                                                                                                  |
 
 ## Arquitetura
 
