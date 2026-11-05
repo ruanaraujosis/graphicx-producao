@@ -196,7 +196,13 @@ Login por usuário/senha (o sistema atual usa formato `nome.cargo`). Registre au
 4. **Dashboard TV + Financeiro básico**.
 5. **Integração Shopee**: produtos, estoque, pedidos, etiquetas, logística.
 6. **NF-e automática** + reforma tributária.
-7. **Marketing Shopee** (boost automático, respostas com IA).
+7. **Marketing Shopee** (boost automático, respostas com IA).
+8. **Provas, produtos e estoque**: pontos da prova para a equipe, marca "Pedido #", preço/estoque inicial/mínimo, inventário por contagem, busca nos seletores, dados de demonstração.
+9. **Pedidos de venda**: venda rápida completa, documento para assinatura, status Vendido, cancelamento e devolução com validação administrativa.
+10. **Arquivos, relatórios e integrações**: arquivos da gráfica, relatório de vendas, base de API e webhooks, roadmap de PDV/CRM.
+11. **Landing page** pública com scrollytelling.
+
+Detalhes e prompt de trabalho das fases 8 a 11: [docs/fases/fases-8-a-11-evolucao.md](docs/fases/fases-8-a-11-evolucao.md).
 
 ## Como trabalhar
 
