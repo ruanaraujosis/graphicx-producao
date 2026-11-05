@@ -143,8 +143,11 @@ O que fazer:
   configurável pela gráfica) e, acima dele, **autorização do gerente** até um segundo limite. A
   autorização usa a mesma confirmação de identidade no servidor da 9.4 (quem tem a permissão de
   aprovar desconto confirma a própria senha), e o pedido guarda quem autorizou e o percentual.
-  **Decidir com o usuário:** os dois percentuais padrão (o Olist usa 15% como exemplo para o
-  vendedor) e qual permissão aprova desconto.
+  **Decidido (2026-11-04):** só quem tem a **permissão de vendedor** dá desconto, como no Olist.
+  Criar o módulo de permissão `vendas` (vendedor) separado de `pedidos`; os dois percentuais
+  (vendedor e gerente) são configurados por cada gráfica, com 15% como padrão do vendedor. Quem
+  não tem a permissão vende sem desconto. Apresentar no modelo de dados da Fase 9 qual permissão
+  autoriza o segundo nível.
 - Configurações do pedido de venda, por gráfica (inspiradas no Olist, só as que fazem sentido aqui):
   - vendedor obrigatório (já existe `created_by`; permitir escolher outro vendedor da equipe, que
     é quem entra no ranking e na comissão);
@@ -159,10 +162,14 @@ O que fazer:
 
 ### 9.2 Status "Vendido"
 
-- **Decidir com o usuário:** criar o status `vendido` no enum `order_status` (valor novo em enum do
-  Postgres não pode ser removido depois) ou reaproveitar `entregue` com o rótulo "Vendido" para a
-  venda rápida. Em qualquer caso, a venda rápida termina direto nesse status, sem passar pelo PCP,
-  e o restante (Kanban, TV, financeiro, ranking, Shopee) precisa ser revisado para o status novo.
+- **Decidido (2026-11-04):** "Vendido" é um status **só das vendas**, não dos pedidos de
+  produção. A venda termina direto em "Vendido", sem passar pelo PCP. Uma venda vendida **não pode
+  ser apagada nem editada**: só **cancelada** ou **devolvida** (9.4), sempre com registro.
+- Implementação: valor novo `vendido` no enum `order_status` (não pode ser removido do enum
+  depois; aceito pela decisão) com uma regra no banco que só o permite em pedidos de venda
+  (marcar a venda com uma coluna própria, ex.: `orders.kind = 'venda'`). Pedidos de produção nunca
+  chegam a "Vendido", e vendas não aparecem no Kanban do PCP. Revisar TV, financeiro, ranking,
+  relatórios e Shopee para o status novo.
 
 ### 9.3 Documento para conferência e assinatura
 
@@ -298,7 +305,8 @@ emissão fiscal: a NF-e (Fase 6) continua adiada e nada deve sugerir que o siste
     suporte), em `<details>` acessível.
   - CTA final e rodapé com links legais.
   - Do modelo **não** entram: tabela de preços, checkout e cupom (o GraphicX ainda não cobra pelo
-    sistema; **Decidir com o usuário** se haverá planos públicos), seletor de moeda e de idioma.
+    sistema e **não haverá preços na landing**, decidido em 2026-11-04), seletor de moeda e de
+    idioma.
 - Marca e pipeline: https://grapphicx.vercel.app/ (logo, painel azul-marinho com onda e textos do
   login). A landing reaproveita essa identidade.
 - O arquivo de planejamento de animações mencionado pelo usuário não está no repositório; pedir a
