@@ -10,7 +10,8 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const next = safeNextPath(searchParams.get("next"));
+  // Esta rota só atende e-mails de recuperação de senha: sem `next`, vai para a nova senha.
+  const next = safeNextPath(searchParams.get("next") ?? "/redefinir-senha");
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;

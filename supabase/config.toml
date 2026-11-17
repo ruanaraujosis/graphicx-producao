@@ -244,6 +244,12 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Recuperação de senha por token_hash: funciona mesmo se o link abrir em outro navegador/app
+# (o fluxo padrão PKCE exige o mesmo navegador que pediu o e-mail).
+[auth.email.template.recovery]
+subject = "Redefinir sua senha - GraphicX"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
