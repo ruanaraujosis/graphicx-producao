@@ -4,6 +4,19 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.6.1] - 2026-11-17
+
+### Corrigido
+
+- **Recuperação de senha:** o link do e-mail deixa de cair em "link inválido". O endereço de retorno vai sem parâmetros (para casar com as URLs liberadas no Supabase), e o link usa `token_hash`, que funciona mesmo abrindo o e-mail em outro navegador ou no celular. Na homologação, o link volta para o próprio endereço da `develop`, e não mais para produção.
+- **Aviso de link inválido:** aparece também para quem já está logado, em vez de redirecionar direto para o painel.
+
+### Alterado
+
+- **E-mail de recuperação da GraphicX:** em português, com a logo GX e as cores da marca (`supabase/templates/recovery.html`). Enviado por SMTP próprio, configurado no painel de cada projeto do Supabase.
+- **Depois de criar a nova senha pelo link**, a sessão é encerrada em todos os aparelhos e a pessoa volta ao login com o aviso "Senha alterada! Entre com a nova senha.". O primeiro acesso com senha provisória continua indo direto para o painel.
+- **Dados de demonstração:** opção `--listar` no script `npm run demo:dados`.
+
 ## [1.6.0] - 2026-11-05
 
 ### Adicionado
