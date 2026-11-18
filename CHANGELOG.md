@@ -4,6 +4,12 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+## [1.6.2] - 2026-11-18
+
+### Corrigido
+
+- **Recuperação de senha com verificação em duas etapas:** quem tem app autenticador digita o código de 6 dígitos antes da tela de nova senha, e a senha passa a ser pedida uma vez só (antes, o formulário reaparecia depois do código). A verificação também é pedida para quem cadastrou o autenticador sem o cargo exigir.
+
 ## [1.6.1] - 2026-11-17
 
 ### Corrigido
