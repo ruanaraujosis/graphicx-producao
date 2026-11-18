@@ -22,9 +22,13 @@ async function Mfa({ searchParams }: { searchParams: PageProps<"/mfa">["searchPa
 
   const rawNext = (await searchParams).next;
   const next = safeNextPath(typeof rawNext === "string" ? rawNext : undefined);
-  if (session.aal === "aal2" || !session.mfaRequired) redirect(next);
+  if (session.aal === "aal2") redirect(next);
 
   const supabase = await createClient();
+  // Quem já tem autenticador confirma o código mesmo sem o cargo exigir MFA
+  // (ex.: o Supabase pede aal2 para trocar a senha pelo link do e-mail).
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (!session.mfaRequired && aal?.nextLevel !== "aal2") redirect(next);
   const { data } = await supabase.auth.mfa.listFactors();
   const factor = data?.totp[0];
 
