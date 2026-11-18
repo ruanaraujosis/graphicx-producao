@@ -71,7 +71,9 @@ export async function updateSession(request: NextRequest) {
     return redirectWithCookies(url, response);
   }
 
-  if (isLoggedIn && pathname === "/login") {
+  // Com `erro` (ex.: link de e-mail inválido) o login aparece mesmo com sessão aberta:
+  // senão o aviso some e a pessoa cai no painel sem saber que o link falhou.
+  if (isLoggedIn && pathname === "/login" && !request.nextUrl.searchParams.has("erro")) {
     const url = request.nextUrl.clone();
     url.pathname = "/inicio";
     url.search = "";

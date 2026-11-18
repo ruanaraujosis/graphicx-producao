@@ -1,7 +1,7 @@
 "use server";
 
 import { emailSchema } from "@/lib/auth/username";
-import { getPublicEnv } from "@/lib/env";
+import { getServerAppUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export type ResetRequestResult = { ok: true } | { ok: false; error: string };
@@ -11,10 +11,9 @@ export async function requestPasswordReset(email: string): Promise<ResetRequestR
   if (!parsed.success) return { ok: false, error: "Informe um e-mail válido." };
 
   const supabase = await createClient();
-  const redirectTo = new URL(
-    "/auth/confirm?next=/redefinir-senha",
-    getPublicEnv().NEXT_PUBLIC_APP_URL,
-  );
+  // Sem query string: a lista de URLs liberadas no Supabase compara o endereço exato, e um
+  // `?next=` fazia o link cair fora da rota. O destino padrão do /auth/confirm já é a nova senha.
+  const redirectTo = new URL("/auth/confirm", getServerAppUrl());
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
     redirectTo: redirectTo.toString(),
   });

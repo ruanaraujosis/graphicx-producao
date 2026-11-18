@@ -42,5 +42,12 @@ export async function setNewPassword(input: z.input<typeof schema>): Promise<{ e
   // A senha agora é da própria pessoa: deixa de ser provisória.
   if (session.mustChangePassword) await clearMustChangePassword(session.id);
 
+  // Recuperação por e-mail: encerra a sessão aberta pelo link (e as de outros
+  // aparelhos) e manda para o login, para entrar normalmente com a nova senha.
+  if (parsed.data.from === "/redefinir-senha") {
+    await supabase.auth.signOut({ scope: "global" });
+    redirect("/login?aviso=senha-alterada");
+  }
+
   redirect(safeNextPath("/inicio"));
 }

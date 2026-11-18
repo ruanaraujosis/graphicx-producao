@@ -26,6 +26,7 @@ export function LoginForm() {
     searchParams.get("erro") === "link-invalido"
       ? 'O link expirou ou já foi usado. Peça um novo em "Esqueci minha senha".'
       : undefined;
+  const passwordChanged = searchParams.get("aviso") === "senha-alterada";
   const [serverError, setServerError] = useState<string | undefined>(linkError);
   const [showPassword, setShowPassword] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -48,6 +49,11 @@ export function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+      {passwordChanged && !serverError && (
+        <Alert role="status">
+          <AlertDescription>Senha alterada! Entre com a nova senha.</AlertDescription>
+        </Alert>
+      )}
       {serverError && (
         <Alert variant="destructive" role="alert">
           <AlertDescription>{serverError}</AlertDescription>

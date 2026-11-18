@@ -7,6 +7,7 @@
  *
  * Só funciona em gráfica marcada como demonstração (organizations.is_demo). Na primeira vez,
  * use --marcar-demo para marcar a gráfica informada. Os SKUs começam com DEMO-.
+ * Com --listar, mostra só o código e o nome das gráficas.
  */
 import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
@@ -21,7 +22,7 @@ if (!url || !secretKey) {
   console.error("✖ Faltam NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SECRET_KEY no arquivo de ambiente.");
   process.exit(1);
 }
-if (!slug) {
+if (!slug && !process.argv.includes("--listar")) {
   console.error("Uso: npm run demo:dados -- <slug-da-grafica> [--marcar-demo]");
   process.exit(1);
 }
@@ -267,6 +268,11 @@ async function initialStock(
 }
 
 async function main() {
+  if (slug === "--listar" || process.argv.includes("--listar")) {
+    const { data } = await db.from("organizations").select("slug, name, is_demo").order("name");
+    for (const o of data ?? []) console.log(`✔ ${o.slug} · ${o.name}${o.is_demo ? " (demo)" : ""}`);
+    return;
+  }
   const { data: org, error } = await db
     .from("organizations")
     .select("id, name, is_demo")

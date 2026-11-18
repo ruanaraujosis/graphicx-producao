@@ -25,3 +25,16 @@ export function getPublicEnv() {
   }
   return parsed.data;
 }
+
+/**
+ * Endereço do app para links gerados no servidor que precisam voltar ao mesmo
+ * ambiente (ex.: e-mail de recuperação de senha). Nos previews da Vercel, como a
+ * homologação na `develop`, usa o endereço fixo da branch: o NEXT_PUBLIC_APP_URL
+ * de lá aponta para produção, e o link levava o código do banco de homologação
+ * para o site de produção.
+ */
+export function getServerAppUrl() {
+  const branchUrl = process.env.VERCEL_BRANCH_URL;
+  if (process.env.VERCEL_ENV === "preview" && branchUrl) return `https://${branchUrl}`;
+  return getPublicEnv().NEXT_PUBLIC_APP_URL;
+}
