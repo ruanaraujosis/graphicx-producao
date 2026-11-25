@@ -23,6 +23,7 @@ import {
   type OrderStatus,
 } from "@/lib/orders/status";
 import { orderQrPng, orderUrl } from "@/lib/orders/qrcode";
+import { SaleReversal } from "../../vendas/sale-reversal";
 import { OrderQrDialog } from "./order-qr-dialog";
 import { ProofPins } from "./proof-pins";
 import { ShopeeShipping } from "./shopee-shipping";
@@ -152,6 +153,22 @@ async function Pedido({ params }: { params: Params }) {
   const phone = order.customer_phone ? digits(order.customer_phone) : "";
   const qrPng = await orderQrPng(order.id);
 
+  // Venda concluída: cancelar/devolver (quanto de cada item já voltou).
+  const canReverse =
+    order.kind === "venda" && status === "vendido" && can(perms, "pedidos.cancelar");
+  const returned = new Map<string, number>();
+  if (canReverse) {
+    const { data: back } = await supabase
+      .from("order_return_items")
+      .select("order_item_id, quantity")
+      .in(
+        "order_item_id",
+        order.order_items.map((i) => i.id),
+      );
+    for (const r of back ?? [])
+      returned.set(r.order_item_id, (returned.get(r.order_item_id) ?? 0) + r.quantity);
+  }
+
   return (
     <>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -209,6 +226,17 @@ async function Pedido({ params }: { params: Params }) {
                 Editar
               </Link>
             </Button>
+          )}
+          {canReverse && (
+            <SaleReversal
+              orderId={order.id}
+              items={order.order_items.map((i) => ({
+                id: i.id,
+                description: i.description,
+                quantity: i.quantity,
+                returned: returned.get(i.id) ?? 0,
+              }))}
+            />
           )}
           <StatusActions
             orderId={order.id}
@@ -599,6 +627,8 @@ function eventText(e: {
       return "anexou o arquivo final";
     case "desconto_autorizado":
       return "liberou o desconto acima do limite do vendedor";
+    case "devolucao":
+      return "registrou uma devolução";
     default:
       return e.type;
   }

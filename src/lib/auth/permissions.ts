@@ -4,7 +4,7 @@
  * "gerenciar" sempre inclui "ver".
  */
 
-export type PermissionAction = "ver" | "gerenciar" | "alterar_preco" | "autorizar";
+export type PermissionAction = "ver" | "gerenciar" | "alterar_preco" | "autorizar" | "cancelar";
 
 export type PermissionModule = {
   key: string;
@@ -18,7 +18,7 @@ export const PERMISSION_MODULES = [
     key: "pedidos",
     label: "Pedidos",
     description: "Pedidos de todos os canais e orçamentos.",
-    actions: ["ver", "gerenciar", "alterar_preco"],
+    actions: ["ver", "gerenciar", "alterar_preco", "cancelar"],
   },
   {
     key: "vendas",
@@ -126,10 +126,15 @@ export const ACTION_LABELS: Record<PermissionAction, string> = {
   gerenciar: "Gerenciar",
   alterar_preco: "Alterar preço de produto com ficha técnica",
   autorizar: "Liberar desconto acima do limite do vendedor",
+  cancelar: "Cancelar e devolver vendas concluídas",
 };
 
 /** Ações além de Ver/Gerenciar: aparecem como opções próprias no perfil. */
-export const EXTRA_ACTIONS: readonly PermissionAction[] = ["alterar_preco", "autorizar"];
+export const EXTRA_ACTIONS: readonly PermissionAction[] = [
+  "alterar_preco",
+  "autorizar",
+  "cancelar",
+];
 
 export function isPermission(value: unknown): value is Permission {
   return typeof value === "string" && (ALL_PERMISSIONS as readonly string[]).includes(value);
