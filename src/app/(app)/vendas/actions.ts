@@ -25,6 +25,7 @@ const saleSchema = z.object({
       z.object({
         variant_id: z.uuid(),
         description: z.string().trim().min(1).max(300),
+        complement: z.string().trim().max(500),
         quantity: z.number().positive().max(1_000_000),
         /** Só vai quando a pessoa trocou o preço (produto com ficha técnica). */
         unit_price: z.number().min(0).max(10_000_000).nullable(),
@@ -64,6 +65,7 @@ export async function createSale(
     p_items: v.items.map((i) => ({
       variant_id: i.variant_id,
       description: i.description,
+      complement: i.complement,
       quantity: i.quantity,
       unit_price: i.unit_price ?? "",
     })),

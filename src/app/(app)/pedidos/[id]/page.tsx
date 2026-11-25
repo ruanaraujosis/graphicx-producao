@@ -1,4 +1,4 @@
-import { FileText, MessageCircle, Pencil, Phone, Tag } from "lucide-react";
+import { FileText, MessageCircle, Pencil, Phone, Printer, Tag } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -67,7 +67,7 @@ async function Pedido({ params }: { params: Params }) {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, number, status, channel, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, shop_id, external_status, ship_by_at, package_number, channel_fee, shipment_arranged_at, chat_sent_at, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
+      "id, number, status, channel, kind, customer_id, customer_name, customer_phone, needs_art, due_date, subtotal, discount, shipping, total, notes, tracking_code, cancel_reason, created_at, external_id, shop_id, external_status, ship_by_at, package_number, channel_fee, shipment_arranged_at, chat_sent_at, marketplace_shops(name), payment_methods(name), order_items(id, description, quantity, unit_price, stock_state, position, variant_id, product_variants(sku))",
     )
     .eq("id", id)
     .eq("organization_id", membership.organizationId)
@@ -191,6 +191,14 @@ async function Pedido({ params }: { params: Params }) {
               >
                 <Tag />
                 Etiqueta de envio
+              </a>
+            </Button>
+          )}
+          {order.kind === "venda" && (
+            <Button variant="outline" asChild>
+              <a href={`/imprimir/vendas/${order.id}`} target="_blank" rel="noreferrer">
+                <Printer />
+                Imprimir venda
               </a>
             </Button>
           )}

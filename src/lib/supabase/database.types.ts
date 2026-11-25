@@ -1284,6 +1284,7 @@ export type Database = {
       };
       order_items: {
         Row: {
+          complement: string | null;
           id: string;
           organization_id: string;
           order_id: string;
@@ -1297,6 +1298,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          complement?: string | null;
           id?: string;
           organization_id: string;
           order_id: string;
@@ -1310,6 +1312,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          complement?: string | null;
           id?: string;
           organization_id?: string;
           order_id?: string;

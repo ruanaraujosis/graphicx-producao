@@ -7,6 +7,7 @@ import {
   Loader2,
   Minus,
   Plus,
+  Printer,
   ShoppingCart,
   Trash2,
 } from "lucide-react";
@@ -40,6 +41,7 @@ type Line = {
   key: string;
   variantId: string;
   description: string;
+  complement: string;
   quantity: number;
   unitPrice: number;
   priceText: string;
@@ -127,6 +129,7 @@ export function SaleForm({
           key: v.id,
           variantId: v.id,
           description: v.label,
+          complement: "",
           quantity: 1,
           unitPrice: price,
           priceText: price.toFixed(2).replace(".", ","),
@@ -212,6 +215,7 @@ export function SaleForm({
         items: lines.map((l) => ({
           variant_id: l.variantId,
           description: l.description,
+          complement: l.complement,
           quantity: l.quantity,
           unit_price: l.priceEdited ? l.unitPrice : null,
         })),
@@ -243,6 +247,12 @@ export function SaleForm({
           </Button>
           <Button asChild variant="outline" className="min-h-11 flex-1">
             <Link href={`/pedidos/${done.id}`}>Ver venda</Link>
+          </Button>
+          <Button asChild variant="outline" className="min-h-11 flex-1">
+            <a href={`/imprimir/vendas/${done.id}`} target="_blank" rel="noopener">
+              <Printer />
+              Imprimir
+            </a>
           </Button>
         </div>
       </section>
@@ -305,6 +315,20 @@ export function SaleForm({
               <li key={l.key} className="flex flex-wrap items-center gap-3 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{l.description}</p>
+                  <Input
+                    aria-label={`Complemento de ${l.description}`}
+                    placeholder="Complemento (opcional, sai na impressão)"
+                    maxLength={500}
+                    value={l.complement}
+                    onChange={(e) =>
+                      setLines((list) =>
+                        list.map((x) =>
+                          x.key === l.key ? { ...x, complement: e.target.value } : x,
+                        ),
+                      )
+                    }
+                    className="mt-1 h-11 text-xs md:h-8"
+                  />
                   <p
                     className={cn(
                       "text-xs",
