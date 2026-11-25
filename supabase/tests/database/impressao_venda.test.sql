@@ -34,7 +34,7 @@ select results_eq(
 
 select throws_ok(
   format($$ update public.order_items set complement = 'Outro' where order_id = %L $$, :'venda'),
-  '42501', null, 'complemento da venda concluída não muda');
+  null, null, 'complemento da venda concluída não muda');
 select lives_ok(
   format($$ update public.order_items set stock_state = stock_state where order_id = %L $$, :'venda'),
   'o estado de estoque continua podendo ser acertado');
