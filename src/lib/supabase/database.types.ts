@@ -1198,6 +1198,75 @@ export type Database = {
           },
         ];
       };
+      order_returns: {
+        Row: {
+          id: string;
+          organization_id: string;
+          order_id: string;
+          kind: string;
+          reason: string;
+          refund_amount: number;
+          refund_via: string;
+          idempotency_key: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          order_id: string;
+          kind: string;
+          reason: string;
+          refund_amount: number;
+          refund_via: string;
+          idempotency_key: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          order_id?: string;
+          kind?: string;
+          reason?: string;
+          refund_amount?: number;
+          refund_via?: string;
+          idempotency_key?: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      order_return_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          return_id: string;
+          order_item_id: string;
+          quantity: number;
+          amount: number;
+          restocked: boolean;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          return_id: string;
+          order_item_id: string;
+          quantity: number;
+          amount: number;
+          restocked?: boolean;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          return_id?: string;
+          order_item_id?: string;
+          quantity?: number;
+          amount?: number;
+          restocked?: boolean;
+        };
+        Relationships: [];
+      };
       sales_settings: {
         Row: {
           organization_id: string;
@@ -2869,6 +2938,14 @@ export type Database = {
         Args: { p_order: string; p_items: Json };
         Returns: undefined;
       };
+      return_sale: {
+        Args: { p_order: string; p_items: Json; p_reason: string; p_key: string };
+        Returns: string;
+      };
+      cancel_sale: {
+        Args: { p_order: string; p_reason: string; p_key: string };
+        Returns: string;
+      };
       customer_overdue: {
         Args: { p_customer: string };
         Returns: { overdue_count: number; overdue_total: number; oldest_due: string | null }[];
@@ -2956,7 +3033,8 @@ export type Database = {
         | "arte_aprovada"
         | "alteracao_pedida"
         | "arte_final"
-        | "desconto_autorizado";
+        | "desconto_autorizado"
+        | "devolucao";
       order_kind: "producao" | "venda";
       sales_channel: "balcao" | "shopee" | "whatsapp";
       person_type: "pf" | "pj";
