@@ -2765,6 +2765,14 @@ export type Database = {
         Args: { p_org: string; p_fields: Json; p_items: Json; p_paid?: boolean };
         Returns: string;
       };
+      rate_limit_blocked: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number };
+        Returns: boolean;
+      };
+      rate_limit_reset: {
+        Args: { p_key: string };
+        Returns: undefined;
+      };
       rate_limit_hit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };
         Returns: boolean;

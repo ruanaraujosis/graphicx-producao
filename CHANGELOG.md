@@ -4,6 +4,10 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+### Segurança
+
+- **Limite de tentativas de senha no login:** depois de 5 senhas erradas na mesma conta (ou 20 no mesmo IP) em 15 minutos, o login fica bloqueado até a janela passar, com aviso para usar “Esqueci minha senha”. Entrar com a senha certa zera a contagem da conta. A mensagem é a mesma para contas que existem ou não.
+
 ## [1.6.2] - 2026-11-18
 
 ### Corrigido
