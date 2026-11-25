@@ -1,4 +1,13 @@
-import { Building2, ChevronRight, PlugZap, ShieldCheck, Tag, Tv, Users } from "lucide-react";
+import {
+  Building2,
+  ChevronRight,
+  PlugZap,
+  ShieldCheck,
+  ShoppingCart,
+  Tag,
+  Tv,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/kit/page-header";
@@ -40,6 +49,14 @@ const SECTIONS: {
     icon: ShieldCheck,
     tone: "info",
     permission: "equipe.ver",
+  },
+  {
+    href: "/configuracoes/vendas",
+    title: "Pedido de venda",
+    description: "Limites de desconto do vendedor e do gerente, avisos e impressão.",
+    icon: ShoppingCart,
+    tone: "teal",
+    permission: "configuracoes.ver",
   },
   {
     href: "/configuracoes/etiquetas",

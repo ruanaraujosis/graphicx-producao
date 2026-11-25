@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { BackLink, ListSkeleton } from "@/components/kit/back-link";
 import { PageHeader } from "@/components/kit/page-header";
 import { requireOrg } from "@/lib/auth/dal";
+import { can } from "@/lib/auth/permissions";
 import { orderNumber } from "@/lib/orders/status";
 import { createClient } from "@/lib/supabase/server";
 import { loadOrderFormOptions } from "../../data";
@@ -53,6 +54,7 @@ async function EditarPedido({ params }: { params: PageProps<"/pedidos/[id]/edita
       <OrderForm
         variants={options.variants}
         payments={options.payments}
+        canEditRecipePrice={can(membership.permissions, "pedidos.alterar_preco")}
         initial={{
           id: order.id,
           channel: order.channel,

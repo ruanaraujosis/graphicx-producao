@@ -141,9 +141,9 @@ async function Pedidos({ searchParams }: { searchParams: Params }) {
           canManage ? (
             <>
               <Button asChild variant="outline">
-                <Link href="/pedidos/venda-rapida">
+                <Link href="/vendas/nova">
                   <ShoppingCart />
-                  Venda rápida
+                  Nova venda
                 </Link>
               </Button>
               <Button asChild>

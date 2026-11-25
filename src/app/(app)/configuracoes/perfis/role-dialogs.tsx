@@ -21,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ACTION_LABELS,
+  EXTRA_ACTIONS,
   PERMISSION_MODULES,
   expandPermissions,
   hasSensitivePermission,
@@ -76,6 +77,27 @@ function PermissionMatrix({
               <div className="min-w-0">
                 <p className="text-sm font-medium">{module.label}</p>
                 <p className="text-xs text-muted-foreground">{module.description}</p>
+                {EXTRA_ACTIONS.filter((action) =>
+                  (module.actions as readonly string[]).includes(action),
+                ).map((action) => {
+                  const perm = `${module.key}.${action}` as Permission;
+                  const id = `perm-${module.key}-${action}`;
+                  return (
+                    <label
+                      key={action}
+                      htmlFor={id}
+                      className="mt-1 flex min-h-11 cursor-pointer items-center gap-2 text-xs md:min-h-8"
+                    >
+                      <Checkbox
+                        id={id}
+                        checked={value.includes(perm)}
+                        disabled={!grantable.includes(perm)}
+                        onCheckedChange={(checked) => toggle(perm, checked === true)}
+                      />
+                      {ACTION_LABELS[action]}
+                    </label>
+                  );
+                })}
               </div>
               {(["ver", "gerenciar"] as const).map((action) => {
                 const perm = `${module.key}.${action}` as Permission;

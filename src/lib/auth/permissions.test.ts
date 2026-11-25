@@ -26,7 +26,7 @@ function sqlArray(functionName: string) {
     if (match) body = match[1];
   }
   if (!body) throw new Error(`Função ${functionName} não encontrada nas migrations`);
-  return [...body.matchAll(/'([a-z]+\.[a-z]+)'/g)].map((m) => m[1]);
+  return [...body.matchAll(/'([a-z]+\.[a-z_]+)'/g)].map((m) => m[1]);
 }
 
 describe("catálogo de permissões", () => {

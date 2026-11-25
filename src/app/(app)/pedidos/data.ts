@@ -10,6 +10,8 @@ export type VariantOption = {
   fulfillment: "sob_encomenda" | "pronta_entrega";
   productionDays: number;
   available: number | null;
+  /** Tem ficha técnica: trocar o preço exige pedidos.alterar_preco. */
+  hasBom: boolean;
   prices: Record<SalesChannel, number>;
 };
 
@@ -66,6 +68,10 @@ export async function loadOrderFormOptions(org: string) {
     ]),
   );
 
+  const withBom = new Set(
+    (availabilityRes.data ?? []).filter((a) => a.bom_items > 0).map((a) => a.variant_id),
+  );
+
   const variants: VariantOption[] = (variantsRes.data ?? []).map((v) => {
     const overrides = new Map(v.variant_channel_prices.map((p) => [p.channel, p.price]));
     return {
@@ -76,6 +82,7 @@ export async function loadOrderFormOptions(org: string) {
       fulfillment: v.products.fulfillment,
       productionDays: v.products.production_days,
       available: availability.get(v.id) ?? null,
+      hasBom: withBom.has(v.id),
       prices: Object.fromEntries(
         SALES_CHANNELS.map((c) => [
           c,

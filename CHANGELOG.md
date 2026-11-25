@@ -4,6 +4,17 @@ Todas as mudanças relevantes deste projeto. Formato baseado em [Keep a Changelo
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Pedido de venda (Fase 9.1):** a venda rápida virou **Nova venda** (`/vendas/nova`; o endereço antigo redireciona). O preço vem sempre do cadastro e os totais são recalculados no banco. A venda guarda o **vendedor** (pode ser outra pessoa da equipe; o ranking do Início passa a usar ele), o marcador **1ª compra** e a observação padrão.
+- **Desconto em dois níveis:** quem tem a permissão nova **Vendas** dá desconto até o limite do vendedor (15% por padrão). Acima disso, até o limite do gerente (30%), um gerente com **Liberar desconto** digita o próprio usuário e senha (e o código do autenticador, se tiver) no aparelho do vendedor; a liberação vale 5 minutos, para uma venda, e fica no histórico do pedido. Tentativas limitadas por gráfica.
+- **Configurações → Pedido de venda:** limites de desconto, pagamento obrigatório, aviso de cliente com contas em atraso, marcador de 1ª compra, observação padrão e opções de impressão.
+- **Permissão Alterar preço de produto com ficha técnica** (`pedidos.alterar_preco`): sem ela, o preço desses produtos fica travado no do cadastro, na venda e no pedido. Produtos sem ficha técnica continuam com preço livre no pedido.
+
+### Alterado
+
+- Perfis que gerenciam pedidos ganharam a permissão **Vendas**. Liberar desconto e alterar preço ficam só com o Administrador até a gráfica conceder a outros perfis.
+
 ## [1.6.2] - 2026-11-18
 
 ### Corrigido

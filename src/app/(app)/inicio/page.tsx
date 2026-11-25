@@ -81,9 +81,9 @@ async function Greeting() {
         canSell ? (
           <>
             <Button asChild variant="outline">
-              <Link href="/pedidos/venda-rapida">
+              <Link href="/vendas/nova">
                 <ShoppingCart />
-                Venda rápida
+                Nova venda
               </Link>
             </Button>
             <Button asChild>
@@ -453,7 +453,7 @@ async function TeamRanking() {
     showSales
       ? supabase
           .from("orders")
-          .select("created_by, total, confirmed_at")
+          .select("created_by, seller_id, total, confirmed_at")
           .eq("organization_id", org)
           .neq("channel", "shopee")
           .not("status", "in", "(orcamento,cancelado)")
@@ -484,7 +484,8 @@ async function TeamRanking() {
       role: m.organization_roles?.name ?? null,
     }));
   const sales = (salesRes.data ?? []).map((o) => ({
-    userId: o.created_by,
+    // O vendedor escolhido na venda; pedidos antigos sem vendedor ficam com quem lançou.
+    userId: o.seller_id ?? o.created_by,
     total: o.total,
     at: o.confirmed_at ?? "",
   }));
