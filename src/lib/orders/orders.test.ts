@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { expandPermissions, type Permission } from "@/lib/auth/permissions";
@@ -23,12 +23,24 @@ describe("status do pedido", () => {
   it("tem a mesma lista e ordem do enum do banco", () => {
     const body = migration.match(/create type public\.order_status as enum \(([\s\S]*?)\);/)?.[1];
     const values = [...(body ?? "").matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+    // Valores acrescentados depois (alter type ... add value) entram no fim, na ordem das migrations.
+    const dir = join(process.cwd(), "supabase/migrations");
+    for (const file of readdirSync(dir)
+      .filter((f) => f.endsWith(".sql"))
+      .sort()) {
+      const sql = readFileSync(join(dir, file), "utf8");
+      for (const m of sql.matchAll(
+        /alter type public.order_status add value (?:if not exists )?'([a-z_]+)'/g,
+      ))
+        values.push(m[1]);
+    }
     expect(values).toEqual([...ORDER_STATUSES]);
   });
 
   it("o quadro não mostra orçamento nem cancelado", () => {
     expect(BOARD_STATUSES).not.toContain("orcamento");
     expect(BOARD_STATUSES).not.toContain("cancelado");
+    expect(BOARD_STATUSES).not.toContain("vendido");
     expect(BOARD_STATUSES[0]).toBe("novo");
   });
 

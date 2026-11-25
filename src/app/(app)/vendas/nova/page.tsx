@@ -12,7 +12,7 @@ export const metadata = { title: "Nova venda" };
 export default function NovaVendaPage() {
   return (
     <div className="flex flex-col gap-6">
-      <BackLink href="/pedidos" label="Pedidos" />
+      <BackLink href="/vendas" label="Vendas" />
       <PageHeader
         title="Nova venda"
         description="Balcão ou WhatsApp: bipe ou busque os produtos, finalize e o estoque é baixado na hora."

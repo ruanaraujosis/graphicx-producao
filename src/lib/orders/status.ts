@@ -17,6 +17,7 @@ export const ORDER_STATUSES = [
   "enviado",
   "entregue",
   "cancelado",
+  "vendido",
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -34,6 +35,7 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
   enviado: "Enviado",
   entregue: "Entregue",
   cancelado: "Cancelado",
+  vendido: "Vendido",
 };
 
 export type StatusTone = "muted" | "info" | "warning" | "primary" | "teal" | "success" | "danger";
@@ -51,12 +53,13 @@ export const STATUS_TONES: Record<OrderStatus, StatusTone> = {
   enviado: "success",
   entregue: "success",
   cancelado: "danger",
+  vendido: "success",
 };
 
-/** Colunas do quadro de produção (orçamentos e cancelados ficam fora). */
+/** Colunas do quadro de produção (orçamentos, cancelados e vendas ficam fora). */
 export const BOARD_STATUSES = ORDER_STATUSES.filter(
-  (s) => s !== "orcamento" && s !== "cancelado",
-) as Exclude<OrderStatus, "orcamento" | "cancelado">[];
+  (s) => s !== "orcamento" && s !== "cancelado" && s !== "vendido",
+) as Exclude<OrderStatus, "orcamento" | "cancelado" | "vendido">[];
 
 /** Etapas em que o pedido ainda está "aberto" (conta prazo). */
 export function isOpen(status: OrderStatus) {
@@ -64,7 +67,8 @@ export function isOpen(status: OrderStatus) {
     status !== "orcamento" &&
     status !== "enviado" &&
     status !== "entregue" &&
-    status !== "cancelado"
+    status !== "cancelado" &&
+    status !== "vendido"
   );
 }
 
@@ -87,6 +91,8 @@ export function canSetStatus(
   to: OrderStatus,
 ): boolean {
   if (from === to) return false;
+  // Vendido só pela venda (create_sale); sai dele só por cancelar/devolver.
+  if (from === "vendido" || to === "vendido") return false;
   if (can(permissions, "pedidos.gerenciar")) return true;
   const restricted = (s: OrderStatus) => s === "orcamento" || s === "cancelado";
   if (restricted(from) || restricted(to)) return false;

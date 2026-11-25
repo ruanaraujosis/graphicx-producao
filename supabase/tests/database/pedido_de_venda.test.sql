@@ -98,7 +98,7 @@ select results_eq(
   format($$ select kind::text, seller_id, subtotal, discount, discount_percent, total, status::text, first_purchase
               from public.orders where id = %L $$, :'venda1'),
   $$ values ('venda'::text, '00000000-0000-0000-0000-0000000009a1'::uuid, 100.00::numeric, 10.00::numeric,
-             10.00::numeric, 90.00::numeric, 'entregue'::text, true) $$,
+             10.00::numeric, 90.00::numeric, 'vendido'::text, true) $$,
   'venda com 10%: preço do cadastro, vendedor e 1ª compra');
 select is((select status from public.receivables where order_id = :'venda1'), 'recebido', 'pago agora: recebido');
 

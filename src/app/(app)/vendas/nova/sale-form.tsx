@@ -242,7 +242,7 @@ export function SaleForm({
             Nova venda
           </Button>
           <Button asChild variant="outline" className="min-h-11 flex-1">
-            <Link href={`/pedidos/${done.id}`}>Ver pedido</Link>
+            <Link href={`/pedidos/${done.id}`}>Ver venda</Link>
           </Button>
         </div>
       </section>
