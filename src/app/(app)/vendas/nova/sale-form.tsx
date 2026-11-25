@@ -1,21 +1,40 @@
 "use client";
 
-import { CheckCircle2, Loader2, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  KeyRound,
+  Loader2,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { cn } from "cn";
 import { type PickerOption, SearchPicker } from "@/components/kit/search-picker";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { parseDecimal } from "@/lib/form-schemas";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { formatPhone } from "@/lib/documents";
-import { quickSale, searchCustomers } from "../actions";
-import type { PaymentOption, VariantOption } from "../data";
-import { NewCustomerButton } from "../new-customer";
+import { searchCustomers } from "../../pedidos/actions";
+import type { PaymentOption, VariantOption } from "../../pedidos/data";
+import { NewCustomerButton } from "../../pedidos/new-customer";
+import { authorizeDiscount, createSale, customerOverdue, type OverdueInfo } from "../actions";
 
 type Line = {
   key: string;
@@ -23,18 +42,43 @@ type Line = {
   description: string;
   quantity: number;
   unitPrice: number;
+  priceText: string;
+  priceEdited: boolean;
+  hasBom: boolean;
   available: number | null;
 };
 
 type Channel = "balcao" | "whatsapp";
 
-/** Venda de balcão em uma tela: bipa/busca o produto, ajusta quantidade e finaliza. */
-export function QuickSale({
+export type SaleSettings = {
+  sellerMaxDiscount: number;
+  managerMaxDiscount: number;
+  requirePaymentMethod: boolean;
+  warnOverdue: boolean;
+  defaultNote: string;
+};
+
+type Authorization = { id: string; percent: number; managerName: string };
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Pedido de venda em uma tela: bipa/busca o produto, ajusta quantidade e finaliza. */
+export function SaleForm({
   variants,
   payments,
+  sellers,
+  currentUserId,
+  settings,
+  canDiscount,
+  canEditRecipePrice,
 }: {
   variants: VariantOption[];
   payments: PaymentOption[];
+  sellers: { value: string; label: string }[];
+  currentUserId: string;
+  settings: SaleSettings;
+  canDiscount: boolean;
+  canEditRecipePrice: boolean;
 }) {
   const [channel, setChannel] = useState<Channel>("balcao");
   const [lines, setLines] = useState<Line[]>([]);
@@ -42,24 +86,41 @@ export function QuickSale({
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [overdue, setOverdue] = useState<OverdueInfo | null>(null);
+  const [seller, setSeller] = useState(currentUserId);
   const [payment, setPayment] = useState(payments[0]?.value ?? "");
   const [discountText, setDiscountText] = useState("");
+  const [notes, setNotes] = useState(settings.defaultNote);
   const [paid, setPaid] = useState(true);
+  const [authorization, setAuthorization] = useState<Authorization | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
   const [done, setDone] = useState<{ id: string; number: number; total: number } | null>(null);
   const [pending, start] = useTransition();
 
   const bySku = new Map(variants.map((v) => [v.sku.toUpperCase(), v]));
   const byId = new Map(variants.map((v) => [v.id, v]));
-  const subtotal = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
-  const discount = Math.max(0, parseDecimal(discountText) ?? 0);
-  const total = Math.max(0, subtotal - discount);
+  const subtotal = round2(lines.reduce((s, l) => s + round2(l.quantity * l.unitPrice), 0));
+  const discount = canDiscount ? Math.max(0, parseDecimal(discountText) ?? 0) : 0;
+  const total = Math.max(0, round2(subtotal - discount));
+  const percent = subtotal > 0 ? round2((discount * 100) / subtotal) : 0;
   const short = lines.filter((l) => l.available !== null && l.quantity > l.available);
+  const overManager = percent > settings.managerMaxDiscount;
+  const needsManager = percent > settings.sellerMaxDiscount && !overManager;
+  const authorized = Boolean(authorization && authorization.percent >= percent);
+  const missingPayment = settings.requirePaymentMethod && !payment;
+  const blocked =
+    lines.length === 0 ||
+    discount > subtotal ||
+    overManager ||
+    (needsManager && !authorized) ||
+    missingPayment;
 
   function addVariant(v: VariantOption) {
     setLines((list) => {
       const found = list.find((l) => l.variantId === v.id);
       if (found)
         return list.map((l) => (l.variantId === v.id ? { ...l, quantity: l.quantity + 1 } : l));
+      const price = v.prices[channel];
       return [
         ...list,
         {
@@ -67,7 +128,10 @@ export function QuickSale({
           variantId: v.id,
           description: v.label,
           quantity: 1,
-          unitPrice: v.prices[channel],
+          unitPrice: price,
+          priceText: price.toFixed(2).replace(".", ","),
+          priceEdited: false,
+          hasBom: v.hasBom,
           available: v.available,
         },
       ];
@@ -83,48 +147,83 @@ export function QuickSale({
     );
   }
 
+  function setPrice(key: string, text: string) {
+    setLines((list) =>
+      list.map((l) =>
+        l.key === key
+          ? {
+              ...l,
+              priceText: text,
+              unitPrice: Math.max(0, parseDecimal(text) ?? 0),
+              priceEdited: true,
+            }
+          : l,
+      ),
+    );
+  }
+
   function changeChannel(c: Channel) {
     setChannel(c);
-    // Preço do canal para os itens que vieram do cadastro.
+    // Preço do canal para os itens que não tiveram o preço trocado.
     setLines((list) =>
       list.map((l) => {
         const v = byId.get(l.variantId);
-        return v ? { ...l, unitPrice: v.prices[c] } : l;
+        if (!v || l.priceEdited) return l;
+        const price = v.prices[c];
+        return { ...l, unitPrice: price, priceText: price.toFixed(2).replace(".", ",") };
       }),
     );
   }
 
+  function pickCustomer(id: string | null) {
+    setCustomerId(id);
+    setOverdue(null);
+    if (id && settings.warnOverdue) {
+      void customerOverdue(id).then((info) => setOverdue(info && info.count > 0 ? info : null));
+    }
+  }
+
   function reset() {
     setLines([]);
-    setCustomerId(null);
+    pickCustomer(null);
     setCustomerName("");
     setCustomerPhone("");
     setDiscountText("");
+    setNotes(settings.defaultNote);
+    setSeller(currentUserId);
     setPaid(true);
+    setAuthorization(null);
     setDone(null);
   }
 
   const finish = () =>
     start(async () => {
-      const r = await quickSale({
+      const r = await createSale({
         channel,
         customer_id: customerId,
         customer_name: customerName,
         customer_phone: customerPhone,
+        seller_id: seller || null,
         payment_method_id: payment || null,
         discount,
+        notes,
         paid,
+        authorization_id: needsManager && authorization ? authorization.id : null,
         items: lines.map((l) => ({
           variant_id: l.variantId,
           description: l.description,
           quantity: l.quantity,
-          unit_price: l.unitPrice,
+          unit_price: l.priceEdited ? l.unitPrice : null,
         })),
       });
       if (r.ok) {
         toast.success(r.message);
         setDone({ id: r.data.id, number: r.data.number, total });
-      } else toast.error(r.error);
+      } else {
+        toast.error(r.error);
+        // Liberação usada ou vencida: pede de novo.
+        if (/liberação/i.test(r.error)) setAuthorization(null);
+      }
     });
 
   if (done) {
@@ -168,7 +267,7 @@ export function QuickSale({
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <section className="flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-sm">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="qs-search">Produto (código SKU ou nome)</Label>
+          <Label htmlFor="sale-search">Produto (código SKU ou nome)</Label>
           <div
             onKeyDown={(e) => {
               // Leitor de código de barras: SKU exato + Enter já adiciona.
@@ -181,7 +280,7 @@ export function QuickSale({
             }}
           >
             <SearchPicker
-              id="qs-search"
+              id="sale-search"
               value={search}
               onTextChange={setSearch}
               onPick={(o) => {
@@ -244,8 +343,17 @@ export function QuickSale({
                     <Plus />
                   </Button>
                 </div>
+                {l.hasBom && canEditRecipePrice ? (
+                  <Input
+                    aria-label={`Preço unitário de ${l.description}`}
+                    inputMode="decimal"
+                    value={l.priceText}
+                    onChange={(e) => setPrice(l.key, e.target.value)}
+                    className="h-11 w-24 text-right md:h-9"
+                  />
+                ) : null}
                 <span className="w-24 text-right font-medium tabular-nums">
-                  {formatCurrency(l.quantity * l.unitPrice)}
+                  {formatCurrency(round2(l.quantity * l.unitPrice))}
                 </span>
                 <Button
                   variant="ghost"
@@ -289,19 +397,19 @@ export function QuickSale({
         </fieldset>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="qs-customer">Cliente (opcional)</Label>
+          <Label htmlFor="sale-customer">Cliente (opcional)</Label>
           <SearchPicker
-            id="qs-customer"
+            id="sale-customer"
             value={customerName}
             minChars={2}
             placeholder="Consumidor final"
             emptyText="Nenhum cliente com esse nome — a venda usa o nome digitado."
             onTextChange={(t) => {
               setCustomerName(t);
-              setCustomerId(null);
+              pickCustomer(null);
             }}
             onPick={(o) => {
-              setCustomerId(o.value);
+              pickCustomer(o.value);
               setCustomerName(o.label);
               if (o.hint) setCustomerPhone(o.hint);
             }}
@@ -320,7 +428,7 @@ export function QuickSale({
                 type="button"
                 className="min-h-11 text-muted-foreground underline md:min-h-0"
                 onClick={() => {
-                  setCustomerId(null);
+                  pickCustomer(null);
                   setCustomerName("");
                   setCustomerPhone("");
                 }}
@@ -334,21 +442,57 @@ export function QuickSale({
               phone={customerPhone}
               channel={channel}
               onCreated={(c) => {
-                setCustomerId(c.id);
+                pickCustomer(c.id);
                 setCustomerName(c.name);
                 if (c.phone) setCustomerPhone(formatPhone(c.phone));
               }}
             />
           )}
+          {overdue && (
+            <p
+              role="status"
+              className="flex gap-2 rounded-xl bg-warning-soft px-3 py-2 text-xs text-warning"
+            >
+              <AlertTriangle className="size-4 shrink-0" aria-hidden />
+              <span>
+                Cliente com {overdue.count} conta(s) em atraso: {formatCurrency(overdue.total)}
+                {overdue.oldest
+                  ? `, a mais antiga venceu em ${formatDate(`${overdue.oldest}T12:00:00`)}`
+                  : ""}
+                .
+              </span>
+            </p>
+          )}
         </div>
 
+        {sellers.length > 1 && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="sale-seller">Vendedor</Label>
+            <select
+              id="sale-seller"
+              className="min-h-11 rounded-lg border bg-background px-3 text-sm md:min-h-9"
+              value={seller}
+              onChange={(e) => setSeller(e.target.value)}
+            >
+              {sellers.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="flex flex-col gap-2">
-          <Label htmlFor="qs-payment">Pagamento</Label>
+          <Label htmlFor="sale-payment">
+            Pagamento{settings.requirePaymentMethod ? " (obrigatório)" : ""}
+          </Label>
           <select
-            id="qs-payment"
+            id="sale-payment"
             className="min-h-11 rounded-lg border bg-background px-3 text-sm md:min-h-9"
             value={payment}
             onChange={(e) => setPayment(e.target.value)}
+            aria-invalid={missingPayment}
           >
             <option value="">Não informado</option>
             {payments.map((p) => (
@@ -359,15 +503,57 @@ export function QuickSale({
           </select>
         </div>
 
+        {canDiscount ? (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="sale-discount">Desconto (R$)</Label>
+            <Input
+              id="sale-discount"
+              inputMode="decimal"
+              placeholder="0,00"
+              value={discountText}
+              onChange={(e) => setDiscountText(e.target.value)}
+              className="min-h-11 md:min-h-9"
+              aria-describedby="sale-discount-help"
+            />
+            <p id="sale-discount-help" className="text-xs text-muted-foreground">
+              {discount > 0 ? `${percent.toLocaleString("pt-BR")}% · ` : ""}
+              Seu limite: {settings.sellerMaxDiscount.toLocaleString("pt-BR")}%. Até{" "}
+              {settings.managerMaxDiscount.toLocaleString("pt-BR")}% com liberação do gerente.
+            </p>
+            {overManager && (
+              <p role="alert" className="text-xs text-destructive">
+                Passa do limite de {settings.managerMaxDiscount.toLocaleString("pt-BR")}% da
+                gráfica.
+              </p>
+            )}
+            {needsManager &&
+              (authorized && authorization ? (
+                <p className="text-xs text-success">
+                  Liberado por {authorization.managerName} (até{" "}
+                  {authorization.percent.toLocaleString("pt-BR")}%).
+                </p>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 md:min-h-9"
+                  onClick={() => setAuthOpen(true)}
+                >
+                  <KeyRound />
+                  Pedir liberação do gerente
+                </Button>
+              ))}
+          </div>
+        ) : null}
+
         <div className="flex flex-col gap-2">
-          <Label htmlFor="qs-discount">Desconto (R$)</Label>
-          <Input
-            id="qs-discount"
-            inputMode="decimal"
-            placeholder="0,00"
-            value={discountText}
-            onChange={(e) => setDiscountText(e.target.value)}
-            className="min-h-11 md:min-h-9"
+          <Label htmlFor="sale-notes">Observação</Label>
+          <Textarea
+            id="sale-notes"
+            rows={2}
+            maxLength={2000}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
           />
         </div>
 
@@ -400,15 +586,141 @@ export function QuickSale({
           </p>
         )}
 
-        <Button
-          className="min-h-12 text-base"
-          disabled={pending || lines.length === 0 || discount > subtotal}
-          onClick={finish}
-        >
+        <Button className="min-h-12 text-base" disabled={pending || blocked} onClick={finish}>
           {pending ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
           Finalizar venda
         </Button>
       </aside>
+
+      <ManagerDialog
+        open={authOpen}
+        onOpenChange={setAuthOpen}
+        percent={percent}
+        onAuthorized={(a) => {
+          setAuthorization(a);
+          setAuthOpen(false);
+          toast.success(`Desconto liberado por ${a.managerName}.`);
+        }}
+      />
     </div>
+  );
+}
+
+/** O gerente digita o próprio usuário e senha no aparelho do vendedor. */
+function ManagerDialog({
+  open,
+  onOpenChange,
+  percent,
+  onAuthorized,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  percent: number;
+  onAuthorized: (a: Authorization) => void;
+}) {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [needsCode, setNeedsCode] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+
+  const close = (next: boolean) => {
+    if (!next) {
+      setPassword("");
+      setCode("");
+      setNeedsCode(false);
+      setError(null);
+    }
+    onOpenChange(next);
+  };
+
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    start(async () => {
+      const r = await authorizeDiscount({ identifier, password, code, percent });
+      if (r.ok) {
+        setPassword("");
+        setCode("");
+        setNeedsCode(false);
+        setError(null);
+        onAuthorized({ id: r.authorizationId, percent, managerName: r.managerName });
+      } else {
+        setError(r.error);
+        if (r.needsCode) setNeedsCode(true);
+      }
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent>
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <DialogHeader>
+            <DialogTitle>Liberação do gerente</DialogTitle>
+            <DialogDescription>
+              Desconto de {percent.toLocaleString("pt-BR")}%. O gerente digita o próprio usuário e
+              senha; vale só para esta venda, por 5 minutos. A sessão do vendedor não muda.
+            </DialogDescription>
+          </DialogHeader>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="mgr-identifier">E-mail ou usuário do gerente</Label>
+            <Input
+              id="mgr-identifier"
+              autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              className="min-h-11"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="mgr-password">Senha do gerente</Label>
+            <Input
+              id="mgr-password"
+              type="password"
+              autoComplete="off"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="min-h-11"
+            />
+          </div>
+          {needsCode && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="mgr-code">Código do app autenticador do gerente</Label>
+              <Input
+                id="mgr-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={7}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="min-h-11 text-center tracking-widest"
+              />
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              onClick={() => close(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" className="min-h-11" disabled={pending}>
+              {pending ? <Loader2 className="animate-spin" /> : <KeyRound />}
+              Liberar desconto
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

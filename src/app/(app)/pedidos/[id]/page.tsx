@@ -588,6 +588,8 @@ function eventText(e: {
       return "pediu alteração na arte";
     case "arte_final":
       return "anexou o arquivo final";
+    case "desconto_autorizado":
+      return "liberou o desconto acima do limite do vendedor";
     default:
       return e.type;
   }

@@ -1,6 +1,5 @@
-"use server";
+﻿"use server";
 
-import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireOrg } from "@/lib/auth/dal";
 import { customerSchema } from "@/app/(app)/cadastros/clientes/schema";
@@ -18,7 +17,7 @@ function revalidateOrders(id?: string) {
   if (id) revalidatePath(`/pedidos/${id}`);
 }
 
-/** Cria (orçamento ou pedido) ou atualiza um pedido com os itens, numa transação. */
+/** Cria (orÃ§amento ou pedido) ou atualiza um pedido com os itens, numa transaÃ§Ã£o. */
 export async function saveOrder(
   input: unknown,
   id?: string,
@@ -59,7 +58,7 @@ export async function saveOrder(
     if (error) {
       return {
         ok: false,
-        error: dbErrorMessage(error, { fallback: "Não foi possível salvar o pedido." }),
+        error: dbErrorMessage(error, { fallback: "NÃ£o foi possÃ­vel salvar o pedido." }),
       };
     }
     revalidateOrders(id);
@@ -77,93 +76,23 @@ export async function saveOrder(
     return {
       ok: false,
       error: error
-        ? dbErrorMessage(error, { fallback: "Não foi possível criar o pedido." })
-        : "Não foi possível criar o pedido.",
+        ? dbErrorMessage(error, { fallback: "NÃ£o foi possÃ­vel criar o pedido." })
+        : "NÃ£o foi possÃ­vel criar o pedido.",
     };
   }
   revalidateOrders();
   return {
     ok: true,
-    message: v.as_quote ? "Orçamento criado." : "Pedido criado.",
+    message: v.as_quote ? "OrÃ§amento criado." : "Pedido criado.",
     data: { id: data },
-  };
-}
-
-const quickSaleSchema = z.object({
-  channel: z.enum(["balcao", "whatsapp"]),
-  customer_id: z.uuid().nullable(),
-  customer_name: z.string().trim().max(160),
-  customer_phone: z.string().trim().max(20),
-  payment_method_id: z.uuid().nullable(),
-  discount: z.number().min(0).max(10_000_000),
-  paid: z.boolean(),
-  items: z
-    .array(
-      z.object({
-        variant_id: z.uuid().nullable(),
-        description: z.string().trim().min(1).max(300),
-        quantity: z.number().positive().max(1_000_000),
-        unit_price: z.number().min(0).max(10_000_000),
-      }),
-    )
-    .min(1, "Inclua pelo menos um produto.")
-    .max(100, "Máximo de 100 itens."),
-});
-
-/**
- * Venda rápida no balcão: o pedido nasce entregue, o estoque é baixado na hora
- * e, com "pago agora", a conta a receber já fica recebida.
- */
-export async function quickSale(
-  input: unknown,
-): Promise<ActionResult<{ id: string; number: number }>> {
-  const { membership } = await requireOrg("pedidos.gerenciar");
-  const parsed = quickSaleSchema.safeParse(input);
-  if (!parsed.success)
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Confira a venda." };
-  const v = parsed.data;
-  const subtotal = v.items.reduce((s, i) => s + i.quantity * i.unit_price, 0);
-  if (v.discount > subtotal) return { ok: false, error: "O desconto é maior que o total." };
-  const phone = digits(v.customer_phone);
-
-  const supabase = await createClient();
-  const { data: id, error } = await supabase.rpc("quick_sale", {
-    p_org: membership.organizationId,
-    p_fields: {
-      channel: v.channel,
-      customer_id: v.customer_id ?? "",
-      customer_name: v.customer_name.length >= 2 ? v.customer_name : "Consumidor final",
-      customer_phone: phone.length >= 10 ? phone : "",
-      payment_method_id: v.payment_method_id ?? "",
-      discount: v.discount,
-      shipping: 0,
-    },
-    p_items: v.items.map((i) => ({ ...i, id: "", variant_id: i.variant_id ?? "" })),
-    p_paid: v.paid,
-  });
-  if (error || !id)
-    return {
-      ok: false,
-      error: error
-        ? dbErrorMessage(error, { fallback: "Não foi possível lançar a venda." })
-        : "Erro.",
-    };
-  const { data: order } = await supabase.from("orders").select("number").eq("id", id).single();
-  revalidateOrders();
-  revalidatePath("/financeiro");
-  revalidatePath("/estoque");
-  return {
-    ok: true,
-    message: `Venda #${order?.number ?? ""} lançada.`,
-    data: { id, number: order?.number ?? 0 },
   };
 }
 
 export type CustomerHit = { id: string; name: string; phone: string | null };
 
-/** Busca rápida de clientes para o formulário do pedido. */
+/** Busca rÃ¡pida de clientes para o formulÃ¡rio do pedido. */
 export async function searchCustomers(q: string): Promise<CustomerHit[]> {
-  const { membership } = await requireOrg("pedidos.gerenciar");
+  const { membership } = await requireOrg(["pedidos.gerenciar", "vendas.gerenciar"]);
   const term = q.trim();
   if (term.length < 2) return [];
   const supabase = await createClient();
@@ -194,7 +123,7 @@ export async function changeOrderStatus(
     "expedicao.gerenciar",
   ]);
   if (!(ORDER_STATUSES as readonly string[]).includes(status)) {
-    return { ok: false, error: "Status inválido." };
+    return { ok: false, error: "Status invÃ¡lido." };
   }
   const supabase = await createClient();
   const { error } = await supabase.rpc("change_order_status", {
@@ -205,7 +134,7 @@ export async function changeOrderStatus(
   if (error) {
     return {
       ok: false,
-      error: dbErrorMessage(error, { fallback: "Não foi possível mudar o status." }),
+      error: dbErrorMessage(error, { fallback: "NÃ£o foi possÃ­vel mudar o status." }),
     };
   }
   revalidateOrders(orderId);
@@ -221,7 +150,7 @@ export async function addOrderComment(input: unknown): Promise<ActionResult> {
   ]);
   const parsed = commentSchema.safeParse(input);
   if (!parsed.success)
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Comentário inválido." };
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "ComentÃ¡rio invÃ¡lido." };
   const supabase = await createClient();
   const { error } = await supabase.from("order_events").insert({
     organization_id: membership.organizationId,
@@ -230,10 +159,13 @@ export async function addOrderComment(input: unknown): Promise<ActionResult> {
     message: parsed.data.message,
   });
   if (error) {
-    return { ok: false, error: dbErrorMessage(error, { fallback: "Não foi possível comentar." }) };
+    return {
+      ok: false,
+      error: dbErrorMessage(error, { fallback: "NÃ£o foi possÃ­vel comentar." }),
+    };
   }
   revalidatePath(`/pedidos/${parsed.data.order_id}`);
-  return { ok: true, message: "Comentário registrado." };
+  return { ok: true, message: "ComentÃ¡rio registrado." };
 }
 
 /** Cadastra o cliente sem sair do pedido (quem cria pedidos pode cadastrar clientes). */
@@ -250,8 +182,8 @@ export async function createCustomerFromOrder(
     messages: {
       created: `Cliente ${parsed.data.name} cadastrado e selecionado no pedido.`,
       updated: "Cliente atualizado.",
-      unique: "Já existe um cliente com esse CPF/CNPJ. Busque pelo nome.",
-      fallback: "Não foi possível cadastrar o cliente.",
+      unique: "JÃ¡ existe um cliente com esse CPF/CNPJ. Busque pelo nome.",
+      fallback: "NÃ£o foi possÃ­vel cadastrar o cliente.",
     },
   });
 }

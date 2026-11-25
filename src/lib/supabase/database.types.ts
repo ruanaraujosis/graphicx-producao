@@ -1071,6 +1071,12 @@ export type Database = {
           created_by: string | null;
           created_at: string;
           updated_at: string;
+          kind: Database["public"]["Enums"]["order_kind"];
+          seller_id: string | null;
+          discount_percent: number;
+          discount_authorized_by: string | null;
+          discount_authorized_at: string | null;
+          first_purchase: boolean;
         };
         Insert: {
           package_number?: string | null;
@@ -1108,6 +1114,12 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+          kind?: Database["public"]["Enums"]["order_kind"];
+          seller_id?: string | null;
+          discount_percent?: number;
+          discount_authorized_by?: string | null;
+          discount_authorized_at?: string | null;
+          first_purchase?: boolean;
         };
         Update: {
           package_number?: string | null;
@@ -1145,6 +1157,12 @@ export type Database = {
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
+          kind?: Database["public"]["Enums"]["order_kind"];
+          seller_id?: string | null;
+          discount_percent?: number;
+          discount_authorized_by?: string | null;
+          discount_authorized_at?: string | null;
+          first_purchase?: boolean;
         };
         Relationships: [
           {
@@ -1176,6 +1194,90 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      sales_settings: {
+        Row: {
+          organization_id: string;
+          seller_max_discount: number;
+          manager_max_discount: number;
+          require_payment_method: boolean;
+          warn_overdue_receivables: boolean;
+          tag_first_purchase: boolean;
+          warn_incomplete_address: boolean;
+          default_note: string | null;
+          print_code: string;
+          print_product_images: boolean;
+          print_item_order: string;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          seller_max_discount?: number;
+          manager_max_discount?: number;
+          require_payment_method?: boolean;
+          warn_overdue_receivables?: boolean;
+          tag_first_purchase?: boolean;
+          warn_incomplete_address?: boolean;
+          default_note?: string | null;
+          print_code?: string;
+          print_product_images?: boolean;
+          print_item_order?: string;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          organization_id?: string;
+          seller_max_discount?: number;
+          manager_max_discount?: number;
+          require_payment_method?: boolean;
+          warn_overdue_receivables?: boolean;
+          tag_first_purchase?: boolean;
+          warn_incomplete_address?: boolean;
+          default_note?: string | null;
+          print_code?: string;
+          print_product_images?: boolean;
+          print_item_order?: string;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      discount_authorizations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          authorized_by: string;
+          max_percent: number;
+          expires_at: string;
+          used_at: string | null;
+          order_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          authorized_by?: string;
+          max_percent: number;
+          expires_at?: string;
+          used_at?: string | null;
+          order_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          authorized_by?: string;
+          max_percent?: number;
+          expires_at?: string;
+          used_at?: string | null;
+          order_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       order_items: {
         Row: {
@@ -2761,6 +2863,20 @@ export type Database = {
         Args: { p_order: string; p_items: Json };
         Returns: undefined;
       };
+      customer_overdue: {
+        Args: { p_customer: string };
+        Returns: { overdue_count: number; overdue_total: number; oldest_due: string | null }[];
+      };
+      create_sale: {
+        Args: {
+          p_org: string;
+          p_fields: Json;
+          p_items: Json;
+          p_paid?: boolean;
+          p_authorization?: string;
+        };
+        Returns: string;
+      };
       quick_sale: {
         Args: { p_org: string; p_fields: Json; p_items: Json; p_paid?: boolean };
         Returns: string;
@@ -2832,7 +2948,9 @@ export type Database = {
         | "prova"
         | "arte_aprovada"
         | "alteracao_pedida"
-        | "arte_final";
+        | "arte_final"
+        | "desconto_autorizado";
+      order_kind: "producao" | "venda";
       sales_channel: "balcao" | "shopee" | "whatsapp";
       person_type: "pf" | "pj";
       fulfillment_mode: "sob_encomenda" | "pronta_entrega";

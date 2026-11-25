@@ -79,10 +79,13 @@ export function OrderForm({
   variants,
   payments,
   initial,
+  canEditRecipePrice = false,
 }: {
   variants: readonly VariantOption[];
   payments: readonly PaymentOption[];
   initial?: OrderFormInitial;
+  /** pedidos.alterar_preco: pode trocar o preço de produto com ficha técnica. */
+  canEditRecipePrice?: boolean;
 }) {
   const router = useRouter();
   const ids = useId();
@@ -385,10 +388,16 @@ export function OrderForm({
                       id={`${ids}-${r.key}-p`}
                       inputMode="decimal"
                       value={r.unit_price}
+                      readOnly={Boolean(v?.hasBom && !canEditRecipePrice)}
+                      title={
+                        v?.hasBom && !canEditRecipePrice
+                          ? "Preço do cadastro (produto com ficha técnica)"
+                          : undefined
+                      }
                       onChange={(e) =>
                         update(r.key, { unit_price: e.target.value, priceEdited: true })
                       }
-                      className="text-right"
+                      className="text-right read-only:bg-muted"
                     />
                   </div>
                   <p className="self-center text-right text-sm font-medium @xl:self-end @xl:pb-2">
