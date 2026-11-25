@@ -1077,6 +1077,7 @@ export type Database = {
           discount_authorized_by: string | null;
           discount_authorized_at: string | null;
           first_purchase: boolean;
+          sold_at: string | null;
         };
         Insert: {
           package_number?: string | null;
@@ -1120,6 +1121,7 @@ export type Database = {
           discount_authorized_by?: string | null;
           discount_authorized_at?: string | null;
           first_purchase?: boolean;
+          sold_at?: string | null;
         };
         Update: {
           package_number?: string | null;
@@ -1163,6 +1165,7 @@ export type Database = {
           discount_authorized_by?: string | null;
           discount_authorized_at?: string | null;
           first_purchase?: boolean;
+          sold_at?: string | null;
         };
         Relationships: [
           {
@@ -2936,7 +2939,8 @@ export type Database = {
         | "expedicao"
         | "enviado"
         | "entregue"
-        | "cancelado";
+        | "cancelado"
+        | "vendido";
       order_item_stock: "livre" | "reservado" | "baixado";
       art_version_status: "pendente" | "aprovada" | "alteracao" | "substituida";
       order_event_type:

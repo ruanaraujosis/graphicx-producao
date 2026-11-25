@@ -34,6 +34,7 @@ async function Quadro() {
       "id, number, status, channel, customer_name, due_date, needs_art, status_changed_at, order_items(description, quantity)",
     )
     .eq("organization_id", membership.organizationId)
+    .eq("kind", "producao")
     .in("status", BOARD_STATUSES)
     .or(`status.not.in.(enviado,entregue),status_changed_at.gte.${weekAgo}`)
     .order("due_date", { ascending: true, nullsFirst: false })

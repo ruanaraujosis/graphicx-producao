@@ -4,6 +4,7 @@ import {
   Contact,
   House,
   Megaphone,
+  Receipt,
   Palette,
   Settings,
   ShoppingBag,
@@ -34,6 +35,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: ShoppingBag,
     scope: "org",
     permission: "pedidos.ver",
+  },
+  {
+    href: "/vendas",
+    label: "Vendas",
+    icon: Receipt,
+    scope: "org",
+    permission: "vendas.ver",
   },
   {
     href: "/artes",

@@ -144,7 +144,8 @@ async function Pedido({ params }: { params: Params }) {
   const canManageOrder = can(perms, "pedidos.gerenciar");
   const canManageArt = can(perms, "artes.gerenciar");
   const canLink = can(perms, ["pedidos.gerenciar", "artes.gerenciar"]);
-  const editable = canManageOrder && !["enviado", "entregue", "cancelado"].includes(status);
+  const editable =
+    canManageOrder && !["enviado", "entregue", "cancelado", "vendido"].includes(status);
   // Provas só antes da impressão (o banco recusa depois).
   const artStage =
     status !== "orcamento" && status !== "cancelado" && isBefore(status, "em_impressao");
