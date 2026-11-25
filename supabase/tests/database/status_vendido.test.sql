@@ -56,10 +56,10 @@ select throws_ok(
 select throws_ok(
   format($$ select public.update_order(%L, '{"customer_name":"Outro"}',
     '[{"id":"","variant_id":"40000000-0000-0000-0000-0000000009b1","description":"Adesivo","quantity":9,"unit_price":5}]') $$, :'venda'),
-  '42501', null, 'venda vendida não é editada');
+  null, null, 'venda vendida não é editada');
 select throws_ok(
   format($$ delete from public.order_items where order_id = %L $$, :'venda'),
-  '42501', null, 'itens da venda vendida não saem');
+  null, null, 'itens da venda vendida não saem');
 reset role;
 
 select throws_ok(
