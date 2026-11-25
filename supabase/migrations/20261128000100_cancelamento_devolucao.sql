@@ -117,7 +117,7 @@ create or replace function private.receivables_guard()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $$
 begin
   if pg_trigger_depth() = 1 and (select auth.uid()) is not null then
     if new.order_id is distinct from old.order_id then
@@ -130,7 +130,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 
 create or replace function private.sale_refund(p_order uuid, p_amount numeric)
 returns text
