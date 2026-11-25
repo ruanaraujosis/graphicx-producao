@@ -110,6 +110,28 @@ create trigger order_events_no_delete
 -- -----------------------------------------------------------------------------
 -- Estorno no financeiro
 -- -----------------------------------------------------------------------------
+
+-- O valor do a receber de pedido continua acompanhando o pedido; a única exceção
+-- é o estorno de uma devolução (app.sale_reversal ligado pela função abaixo).
+create or replace function private.receivables_guard()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  if pg_trigger_depth() = 1 and (select auth.uid()) is not null then
+    if new.order_id is distinct from old.order_id then
+      raise exception 'Não é possível trocar o pedido da conta.' using errcode = '42501';
+    end if;
+    if old.order_id is not null and new.gross is distinct from old.gross
+       and coalesce(current_setting('app.sale_reversal', true), '') <> 'on' then
+      raise exception 'O valor da conta de um pedido acompanha o pedido. Edite o pedido.' using errcode = '23514';
+    end if;
+  end if;
+  return new;
+end;
+$;
+
 create or replace function private.sale_refund(p_order uuid, p_amount numeric)
 returns text
 language plpgsql
@@ -129,11 +151,13 @@ begin
 
   if r.id is not null and r.status = 'aberto' and r.gross >= p_amount then
     v_left := r.gross - p_amount;
+    perform set_config('app.sale_reversal', 'on', true);
     update public.receivables
        set gross = v_left,
            fee = least(fee, v_left),
            status = case when v_left = 0 then 'cancelado' else status end
      where id = r.id;
+    perform set_config('app.sale_reversal', '', true);
     return 'a_receber';
   end if;
 
