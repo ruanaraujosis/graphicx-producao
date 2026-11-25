@@ -574,3 +574,6 @@ $$;
 
 revoke all on function public.customer_overdue(uuid) from public, anon;
 grant execute on function public.customer_overdue(uuid) to authenticated;
+
+-- Visitantes (anon) não acessam as tabelas novas.
+revoke all on public.sales_settings, public.discount_authorizations from anon;
